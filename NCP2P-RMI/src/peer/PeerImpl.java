@@ -21,13 +21,12 @@ public class PeerImpl implements Peer {
 	SuperPeer sp;
 	Thread spThrd;
 	
-	private File shareDir;
+	public File shareDir;
 	private WatchDir watcher;
 	private Thread watcherThread;
 	
 	private DownloadManager dm;
 	
-	//private Hashtable<String,FileInfo> files;
 	private TwoWayHashMap<String,File> files; //mapping from filename to md5
 	
 	public PeerImpl(){
@@ -39,7 +38,10 @@ public class PeerImpl implements Peer {
 		
 		spThrd=new Thread((Runnable) sp); //? Runnable
 		spThrd.start();
-		sp.register(this, true);
+		while(!sp.register(this, true)){ //registration failed, then go inside loop, to change nickname
+			nick="Peer" + new Random().nextInt(20);
+		};
+		
 		
 		try{
 			shareDir=new File("E:\\TEST3");
@@ -89,17 +91,24 @@ public class PeerImpl implements Peer {
 		//TODO: rather than sending FileInfo object, send only nameOf file, Size in bytes, Checksum.. enough to construct fi at server side.
 	}
 	
-	void downloadFile(String checksum){
-		SocketAddress sa=dm.getSocketAddress();
+	void downloadFile(String checksum,String localName){
+		FileInfo fi=sp.getFileInfo(checksum);
+		if(fi==null){
+			System.out.println("File not available!");
+			return;
+		}
+		int dport=dm.getPort();
+		String dest=":" + dport; //superpeer will fill first part
 		int sessionID=new Random().nextInt();
-		boolean b=false;
-		if(sa!=null){
-			b=sp.downloadFile(sa,checksum,sessionID);
+
+		File f=new File(shareDir + "\\" +  localName);
+		if(dport!=0 && dport!=-1){
+			dm.addDownload(fi, f, sessionID); //local representative of this download
+			sp.downloadFile(dest,checksum,sessionID);
+			//TODO: fix this situation without adding more remote Calls
 		}else{
 			System.out.println("Download failed, local endpoint is not ready!");
 		}
-		
-		System.out.println("DOWNLOAD:" + b);
 	}
 	
 	void searchFile(String query){
@@ -130,7 +139,7 @@ public class PeerImpl implements Peer {
 	
 	//****************TO BE CALLED by SERVER **************
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,SocketAddress dest) {
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest) {
 		// This function will be called by remote server
 	//	FileInfo fi=files.get(strfi);
 	//	if(fi==null){
@@ -138,6 +147,7 @@ public class PeerImpl implements Peer {
 	//	}
 	//	//somehow get File from checksum recvd, and then give it to upload
 	//	boolean b=dm.addUpload(fi, f, sessionID);
+		System.out.println("UPLOADing:" + strfi + " : " + blkfrm + "-->"+ blkto + " to " + dest);
 		
 		return false;
 	}

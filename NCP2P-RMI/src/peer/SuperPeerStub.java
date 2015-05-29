@@ -4,19 +4,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.concurrent.SynchronousQueue;
 
 import com.FileInfo;
 import com.Peer;
 import com.SuperPeer;
+import com.TransferMap;
 
 public class SuperPeerStub implements SuperPeer,Runnable{
 /* Peer Side Representative of SuperPeer
  * Job of this class is to Pack Parameters and send to server, unpack returned result and give back*/
 	public static final long TIMEOUT=4500;
+	Random r;
 	
 	Socket s;
 	String site;
@@ -28,12 +30,15 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	boolean connFlag;
 	
 	SynchronousQueue<Object> respBuf;
+	TransferMap<Integer,Object> buffer;
 	
 	public SuperPeerStub(PeerImpl p, String site,int port){
 		this.site=site;
 		this.port=port;
 		this.p=p;
 		respBuf=new SynchronousQueue<Object>();
+		r=new Random();
+		buffer=new TransferMap<Integer,Object>(); //buffer size=16
 	}
 	
 	private void initConnection(){
@@ -55,36 +60,36 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("FCHANGE"));
+			Integer id=writeId();
 			obos.writeObject(fileName);
 			obos.writeObject(new Long(fileSize));
 			obos.writeObject(strfi);
 			obos.writeObject(new Integer(stat));
 
-			response=(Boolean)respBuf.take();
+			response=(Boolean)buffer.getAndWait(id,TIMEOUT); //mapping found to msg sent
+			//response=(Boolean)respBuf.take();
 			
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		return response;
 	}
+	
+	
 
 	@Override
 	public HashSet<FileInfo> searchFile(String query) {
 		while(!connFlag); //wait for connect
 		HashSet<FileInfo> hs=new HashSet<FileInfo>();
 		try {
-			System.out.print("Search Query:");
 			obos.writeObject(new String("SEARCH"));
+			Integer id=writeId();
 			System.out.println(query);
 			obos.writeObject(query);
 			
-			hs=(HashSet<FileInfo>)respBuf.take();
+			hs=(HashSet<FileInfo>)buffer.getAndWait(id,TIMEOUT);
 			
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
@@ -92,19 +97,18 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	}
 
 	@Override
-	public boolean downloadFile(SocketAddress sa, String checksum,int sessionID) {
+	public boolean downloadFile(String sa, String checksum,int sessionID) {
 		boolean response=false;
 		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("DOWNLOAD"));
+			Integer id=writeId();
 			obos.writeObject(sa);
 			obos.writeObject(checksum);
 			obos.writeObject(new Integer(sessionID));
 
-			response=(Boolean)respBuf.take();
+			response=(Boolean)buffer.getAndWait(id,TIMEOUT);
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		
@@ -117,14 +121,13 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("REG"));
+			Integer id=writeId();
 			obos.writeObject(p.toString());
 
-			response=(Boolean)respBuf.take(); /* This will wait till run() enters some value in this Syncqueue*/
+			response=(Boolean)buffer.getAndWait(id,TIMEOUT); /* This will wait till run() enters some value in this Syncqueue*/
 
 		} catch (IOException e) {
 			//connection error
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		return response;
@@ -151,19 +154,18 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 							String strfi=(String)obis.readObject();
 							Integer blkfrm=(Integer)obis.readObject();
 							Integer blkto=(Integer)obis.readObject();
-							SocketAddress dest=(SocketAddress)obis.readObject();
+							String dest=(String)obis.readObject();
 							Boolean b1=(Boolean)p.uploadBlock(strfi, blkfrm, blkto, dest);
+							obos.writeObject(new String("UPLOADBLOCKREPLY"));
 							obos.writeObject(b1);
 							continue; //loop continue
-						}
+						}	
 					}
 					
 					//Server sent response after method execution
-					try {
-						respBuf.put(obj);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					Integer id=(Integer)obis.readObject();
+					obj=obis.readObject();
+					buffer.putIfAbsent(id,obj);
 					
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();}
@@ -172,12 +174,34 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			// Connection lost
 			System.out.println("Disconnected:" + p.nick);
 			//execute connection to next Super peer
-			e.printStackTrace();
+			//e.printStackTrace();
 			connFlag=false;
 		}catch(IOException ie){
 			ie.printStackTrace();
 			connFlag=false;
 		}
+	}
+
+	@Override
+	public FileInfo getFileInfo(String checksum) {
+		try {
+			obos.writeObject(new String("GETFINFO"));
+			Integer id=writeId();
+			obos.writeObject(checksum);
+
+			return (FileInfo)buffer.getAndWait(id,TIMEOUT);
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return null;
+	}
+	
+	Integer writeId() throws IOException{
+		Integer id=new Integer(r.nextInt());
+		buffer.put(id,null);
+		obos.writeObject(id);
+		return id;
 	}
 
 }

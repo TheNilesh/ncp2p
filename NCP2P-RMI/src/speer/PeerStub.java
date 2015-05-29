@@ -49,6 +49,8 @@ public class PeerStub implements Peer,Runnable {
 		/* This thread continously listen to Peer
 		 */
 		boolean response;
+		String checksum=null;
+		Integer id=null;
 		initConnection(); //open streams for communication;
 		
 		try{		
@@ -60,12 +62,14 @@ public class PeerStub implements Peer,Runnable {
 					
 					System.out.println(nick + " : " + ch);
 					
-					String checksum=null;
+					
 					switch(ch){ //check the type of Request
 					
 					case "REG":
+						id=(Integer)obis.readObject();
 						nick=(String)obis.readObject();
 						response=sp.register(this, true);
+						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						if(response==true){
 							registered=true; //Now peer's requests will be accepted
@@ -73,33 +77,47 @@ public class PeerStub implements Peer,Runnable {
 						break;
 						
 					case "SEARCH":
+						id=(Integer)obis.readObject();
 						String query=(String)obis.readObject();
 						System.out.println("Remote Search:" + query);
+						obos.writeObject(id);
 						obos.writeObject(sp.searchFile(query));
 						break;
 						
 					case "DOWNLOAD":
-						SocketAddress dest=(SocketAddress)obis.readObject();
+						id=(Integer)obis.readObject();
+						String dest=(String)obis.readObject();
+						dest.concat(s.getInetAddress().getHostAddress()); //address now becomes= IP:port
 						checksum=(String)obis.readObject();
 						Integer sessionID=(Integer)obis.readObject();
 						response=sp.downloadFile(dest,checksum,sessionID);
+						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						break;
 					
 					case "FCHANGE":
+						id=(Integer)obis.readObject();
 						String fileName = (String)obis.readObject();
 						Long fileSize=(Long)obis.readObject();
 						checksum=(String)obis.readObject();
 						int stat=(Integer)obis.readObject();
 						response=sp.fileChanged(nick, fileName, fileSize, checksum, stat);
+						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						break;
 				
-					case "UPLOADBLOCK":
+					case "UPLOADBLOCKREPLY":
 						Boolean resp1=(Boolean)obis.readObject();
 						try {
 							respBuf.offer(resp1, 5, TimeUnit.SECONDS);
 						} catch (InterruptedException e) {}
+						break;
+					case "GETFINFO":
+						id=(Integer)obis.readObject();
+						checksum=(String)obis.readObject();
+						FileInfo fi=sp.getFileInfo(checksum);
+						obos.writeObject(id);
+						obos.writeObject(fi);
 						break;
 					default:
 						System.out.println("No method matching:" + ch);
@@ -126,7 +144,7 @@ public class PeerStub implements Peer,Runnable {
 
 	
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,SocketAddress dest){
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest){
 		Boolean b;
 		try {
 			obos.writeObject(new String("UPLOADBLOCK"));

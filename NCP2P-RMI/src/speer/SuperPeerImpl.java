@@ -1,11 +1,11 @@
 package speer;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.FileInfo;
 import com.Peer;
@@ -14,7 +14,7 @@ import com.SuperPeer;
 public class SuperPeerImpl implements SuperPeer {
 
 	private transient Hashtable<String,Peer> peers;
-	private transient Hashtable<String,FileInfo> files;
+	private transient ConcurrentHashMap<String,FileInfo> files;
 	private SPServer server;
 	
 	public static void main(String args[]){
@@ -27,7 +27,7 @@ public class SuperPeerImpl implements SuperPeer {
 	
 	public SuperPeerImpl() throws IOException{
 		peers=new Hashtable<String,Peer>();
-		files=new Hashtable<String,FileInfo>();
+		files=new ConcurrentHashMap<String,FileInfo>();
 		server=new SPServer(this,4012);
 	}
 	
@@ -64,28 +64,36 @@ public class SuperPeerImpl implements SuperPeer {
 
 
 	@Override
-	public boolean downloadFile(SocketAddress dest,String checksum,int sessionID) {
+	public boolean downloadFile(String dest,String checksum,int sessionID) {
 		System.out.println("SP.downloadFile()");
 		if(!files.containsKey(checksum)){
 			return false;
 		}
-		boolean success=false;
+		boolean success=true;
 		FileInfo fi=files.get(checksum);
 		HashSet<String> seeders=fi.getSeeders();
 		
 		int scnt=seeders.size();	//Source count
 		int blkcnt=fi.getBlocksCount();//Block count
-		System.out.println("BLOCK COUNT: " + blkcnt);
+		
+		if(scnt>blkcnt){	//Source are more than blocks, hence ignore some sources
+			scnt=blkcnt;
+		}
+		
 		int eqJ=blkcnt/scnt;	//equal Job
+		System.out.println("BLOCK COUNT: " + blkcnt + " EqJ:" + eqJ + "scnt:" + scnt );
 		int exJ=blkcnt % eqJ;	//extra Job
 		
-		int blkfrm=0;	//from this block
-		int blkto;		//to this block
+		
+		int blkfrm=0;	//from this block, included=block[blkfrm]
+		int blkto;		//to this block, not included index=block[blkto]
 		for(String s:seeders){
 			blkto=blkfrm + eqJ;
+			blkcnt-=eqJ;	//blocks reduced
 			if(exJ>0){
 				exJ--;
 				blkto++;
+				blkcnt--;
 			}
 			
 			//ask s to send Blocks from blkfrm to blkto
@@ -97,7 +105,11 @@ public class SuperPeerImpl implements SuperPeer {
 				System.out.println(p.toString() + "--> FROM:" + blkfrm + " TO:" + blkto);
 			}
 			
-			blkfrm=blkto;
+			if(blkcnt<=0){
+				//Ignore other sources
+				break;
+			}
+			blkfrm=blkto+1;
 		}
 		
 		return success;
@@ -114,7 +126,7 @@ public class SuperPeerImpl implements SuperPeer {
 		}else{
 			success=(peers.remove(p.toString()) != null);
 			//Peer unregistred, delete its file from files
-			for(FileInfo fi:files.values()){
+			for(FileInfo fi:files.values()){		//TODO: Fix concurrent modification exception, fixed NOT yested
 				fi.removeSeeder(p.toString());
 				if(fi.seederCount()<1){ //No seeder so remove file
 					files.remove(fi.getChecksum());
@@ -144,6 +156,11 @@ public class SuperPeerImpl implements SuperPeer {
 			}
 		}
 		return match;
+	}
+
+	@Override
+	public FileInfo getFileInfo(String checksum) {
+		return files.get(checksum);
 	}
 
 }

@@ -62,6 +62,7 @@ public class PeerUI {
 		JButton btnSubmit = new JButton("Submit");
 		
 		p=new PeerImpl();
+		appWindow.setTitle(p.nick + " : " + p.shareDir.getName());
 		btnSubmit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String[] cmd = txtCmd.getText().split(" ");
@@ -73,7 +74,7 @@ public class PeerUI {
 					p.fileChanged(new File(cmd[1]), Integer.parseInt(cmd[2]));
 					break;
 				case "DOWNLOAD":
-					p.downloadFile(cmd[1]);
+					p.downloadFile(cmd[1],cmd[2]);
 					break;
 				case "SEARCH":
 					p.searchFile(cmd[1]);

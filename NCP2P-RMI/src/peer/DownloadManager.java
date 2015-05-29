@@ -14,7 +14,7 @@ import com.Constants;
 import com.FileInfo;
 
 public class DownloadManager {
-	Hashtable<Integer,Download> list;
+	Hashtable<Integer,Download> downloads;
 	Hashtable<Integer,Upload> uploads;
 	PeerImpl proc;
 	DatagramSocket ds;
@@ -22,22 +22,21 @@ public class DownloadManager {
 	
 	DownloadManager(PeerImpl proc,int port) throws SocketException{
 		this.proc=proc;
-		list=new Hashtable<Integer,Download>();
+		downloads=new Hashtable<Integer,Download>();
 		connFlag=true;
 		ds=new DatagramSocket(port);
 	}
 	
-	public SocketAddress getSocketAddress(){
-		return ds.getLocalSocketAddress();
-	}
-	
-	void addDownload(FileInfo fi,File localfile, int sessionID){
-		try{
-				Download d=new Download(this,fi,localfile,sessionID);
-				list.put(new Integer(sessionID), d);
-			}catch(SocketException e){
-				e.printStackTrace();
-		}
+	Download addDownload(FileInfo fi,File localfile, int sessionID){
+		//try{
+				//Download d=new Download(this,localfile,sessionID);
+				System.out.println("Download added "+ fi.toString() + " : " + localfile + " SessionID:" + sessionID);
+				//downloads.put(new Integer(sessionID), d);
+				//return d;
+		//	}catch(SocketException e){
+		//		e.printStackTrace();
+		//}
+		return null;
 	}
 
 	public void addUpload(FileInfo fi, File f, int sessionID){
@@ -87,7 +86,7 @@ public class DownloadManager {
 	boolean processData(byte[] packet){
 		ByteArrayInputStream bis=new ByteArrayInputStream(packet);
 		int sessionID=bis.read();
-		Download d=list.get(new Integer(sessionID)); //Map with actual download
+		Download d=downloads.get(new Integer(sessionID)); //Map with actual download
 		if(d==null){
 			return false;
 		}
@@ -98,5 +97,10 @@ public class DownloadManager {
 		}).start();
 		
 		return true;
+	}
+
+	public int getPort() {
+		// TODO Auto-generated method stub
+		return ds.getLocalPort();
 	}
 }
