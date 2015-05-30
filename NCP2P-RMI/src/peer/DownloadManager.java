@@ -18,13 +18,13 @@ import com.FileInfo;
 public class DownloadManager implements Runnable {
 	Hashtable<Integer,Download> downloads;
 	Hashtable<Integer,Upload> uploads;
-	PeerImpl proc;
+	PeerImpl p;
 	DatagramSocket ds;
 	InetSocketAddress myaddress;
 	boolean connFlag;
 	
-	DownloadManager(PeerImpl proc,int port) throws SocketException{
-		this.proc=proc;
+	DownloadManager(PeerImpl p,int port) throws SocketException{
+		this.p=p;
 		downloads=new Hashtable<Integer,Download>();
 		uploads=new Hashtable<Integer,Upload>();
 		connFlag=false;
@@ -63,6 +63,15 @@ public class DownloadManager implements Runnable {
 		uploads.put(sessionID,u);
 		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID  + " to " + dest);
 		return u;
+	}
+	
+	void downloadOver(int sessionID){
+		
+		Download d=downloads.get(sessionID);
+		if(d!=null){
+			p.downloadComplete(d.localfile);
+		}
+		
 	}
 	
 	InetSocketAddress getExternalAddress(){

@@ -104,9 +104,7 @@ public class PeerStub implements Peer,Runnable {
 					case "UPLOADBLOCKREPLY":
 						Boolean resp1=(Boolean)obis.readObject();
 						try {
-							System.out.println("S:Response producing");
 							respBuf.put(resp1);
-							System.out.println("S:Response produced");
 						} catch (InterruptedException e) {}
 						break;
 						
@@ -132,7 +130,6 @@ public class PeerStub implements Peer,Runnable {
 	@Override
 	public boolean uploadBlock(String strfi,int blkfrm,int blkto,InetSocketAddress dest,int sessionID){
 		Boolean b=false;
-		System.out.println("Asking " + this + " to upload");
 		try {
 			obos.writeObject(new String("UPLOADBLOCK"));
 			obos.writeObject(strfi);
@@ -142,9 +139,9 @@ public class PeerStub implements Peer,Runnable {
 			obos.writeObject(new Integer(sessionID));
 			
 			try{
-				System.out.println("S:Response consumer waiting");
+				//System.out.println("S:Response consumer waiting");
 				b=(Boolean)respBuf.take();
-				System.out.println("S:Response consumed");
+				//System.out.println("S:Response consumed");
 			}catch(InterruptedException e){}
 		} catch (IOException e) {
 			e.printStackTrace();

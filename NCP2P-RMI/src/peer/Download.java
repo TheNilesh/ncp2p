@@ -58,6 +58,7 @@ public class Download{
 				}
 				if(blkgot==blkcnt){
 					System.out.println("File received");
+					dm.downloadOver(sessionID);
 					out.close();
 				}
 				

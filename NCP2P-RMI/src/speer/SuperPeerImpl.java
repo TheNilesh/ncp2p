@@ -37,20 +37,22 @@ public class SuperPeerImpl implements SuperPeer {
 	
 	@Override
 	public boolean fileChanged(String p, String fileName, long fileSize, String checksum, int stat) {
-		System.out.println("SP.fileChanged():" + fileName);
+
 		boolean response=false;
 		FileInfo fi;
-		if(stat==FileInfo.CREATE){
+		if(stat==FileInfo.CREATE || stat==FileInfo.MODIFY){
 			if(files.containsKey(checksum)){  //already Available
 				fi=files.get(checksum);
 				fi.addSeeder(p);
 				fi.attachTag(fileName);
 				response=true;
+				System.out.println("SP.fileChanged(CREATE_OLD):" + fileName);
 			}else{
 				fi=new FileInfo(fileName,fileSize,checksum); //new Unique
 				fi.addSeeder(p);
 				files.put(checksum, fi);
 				response=true;
+				System.out.println("SP.fileChanged(CREATE_NEW):" + fileName);
 			}
 		}else if(stat==FileInfo.DELETE){ 
 			fi=files.get(checksum);
@@ -58,7 +60,9 @@ public class SuperPeerImpl implements SuperPeer {
 				fi.removeSeeder(p);
 				if(fi.seederCount()<1){ //No seeder so remove file
 					files.remove(checksum);
+					System.out.println("SP.fileChanged(DELETE_Parmanent):" + fileName);
 				}
+				System.out.println("SP.fileChanged(DELETE):" + fileName);
 				response=true;
 			}else{							//delete already avail
 				System.out.println(fi+ " is NOT on server to DELETE");
@@ -70,7 +74,7 @@ public class SuperPeerImpl implements SuperPeer {
 
 	@Override
 	public boolean downloadFile(InetSocketAddress dest,String checksum,int sessionID) {
-		System.out.println("SP.downloadFile()");
+		System.out.println("SP.downloadFile()" + sessionID);
 		if(!files.containsKey(checksum)){
 			return false;
 		}
@@ -124,7 +128,7 @@ public class SuperPeerImpl implements SuperPeer {
 
 	@Override
 	public boolean register(Peer p,boolean status) {
-		System.out.println("SP.register() : " + status);
+		System.out.println("register()  " + p.toString() + " : " + status);
 		// add Peer into peerList
 		boolean success=false;
 		if(status){
@@ -147,10 +151,6 @@ public class SuperPeerImpl implements SuperPeer {
 	@Override
 	public HashSet<FileInfo> searchFile(String query) {
 		System.out.println("SP.searchFile()");
-		/*Iterate through files for mtching tags
-		 * remove file to which seeder is p, /*because he already have that file
-		 * return result;
-		 */
 		FileInfo fi;
 		HashSet<FileInfo> match=new HashSet<FileInfo>();
 		Collection<FileInfo> files2=files.values();

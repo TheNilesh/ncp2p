@@ -101,15 +101,12 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("DOWNLOAD"));
-			System.out.println("Writing Inet"+ sa);
 			obos.writeObject(sa);
 			obos.writeObject(checksum);
 			obos.writeObject(new Integer(sessionID));
 
 			try{
-				System.out.println("Download WAITING");
 				response=(Boolean)respBuf.take();
-				System.out.println("Download Got resp");
 			} catch (InterruptedException e) {e.printStackTrace();	}
 			
 		} catch (IOException e) {
@@ -123,7 +120,6 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	public synchronized boolean register(Peer p, boolean status) {
 		boolean response=false;
 		while(!connFlag); //wait for connect
-		//System.out.println("SPS:register()");
 		try {
 			obos.writeObject(new String("REG"));
 			obos.writeObject(p.toString());
@@ -136,7 +132,6 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			//connection error
 			e.printStackTrace();
 		}
-		System.out.println("SPS:register()");
 		return response;
 	}
 	
@@ -160,9 +155,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	@Override
 	public void run() {
 		/* This thread continously listen to Server through PeerStub*/
-		System.out.println("Connecting SP:" + site + ":" + port);
+		System.out.println("Connecting to SuperPeer:" + site + ":" + port);
 		initConnection();
-		System.out.println("Connected to SP");
+		System.out.println("Connected to SuperPeer");
 		
 		try{	
 			while(connFlag){
@@ -203,7 +198,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			}//while loop ends
 		}catch (SocketException e) {
 			// Connection lost
-			System.out.println("Disconnected:" + p.nick);
+			System.out.println("Disconnected from superpeer");
 			//execute connection to next Super peer
 			//e.printStackTrace();
 			connFlag=false;

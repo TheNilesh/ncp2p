@@ -74,18 +74,20 @@ public class PeerImpl implements Peer {
 		if(stat==FileInfo.DELETE){
 			strfi = files.getBackward((File)f);
 			files.remove(strfi);
+			System.out.println("DELETED:" + f.getName());
 		}else if(stat==FileInfo.CREATE){
 			strfi=d.calculateMD5(f);
 			files.put(strfi,(File)f);
+			System.out.println("CREATED:" + f.getName());
 		}else if(stat==FileInfo.MODIFY){
 			strfi=files.getBackward((File)f); //old mapping
 			files.remove(strfi);			//remove old mapping
 			strfi=d.calculateMD5(f);
 			files.put(strfi,(File)f);	//add new mapping
+			System.out.println("MODIFIED:" + f.getName());
 		}
 
-		System.out.println("CHANGE:" + f.getName());
-		
+
 		sp.fileChanged(nick,f.getName(),f.length(),strfi,stat);
 		//TODO: rather than sending FileInfo object, send only nameOf file, Size in bytes, Checksum.. enough to construct fi at server side.
 	}
@@ -168,5 +170,11 @@ public class PeerImpl implements Peer {
 	@Override
 	public String toString(){
 		return nick;
+	}
+
+	public void downloadComplete(File f) {
+		boolean b=ignored.remove(f);
+		System.out.println("UNIGNORE:" + b + " Download Complete " + f.getName());
+		fileChanged(f,FileInfo.CREATE);
 	}
 }
