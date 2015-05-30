@@ -50,7 +50,6 @@ public class PeerStub implements Peer,Runnable {
 		 */
 		boolean response;
 		String checksum=null;
-		Integer id=null;
 		initConnection(); //open streams for communication;
 		
 		try{		
@@ -66,10 +65,8 @@ public class PeerStub implements Peer,Runnable {
 					switch(ch){ //check the type of Request
 					
 					case "REG":
-						id=(Integer)obis.readObject();
 						nick=(String)obis.readObject();
 						response=sp.register(this, true);
-						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						if(response==true){
 							registered=true; //Now peer's requests will be accepted
@@ -77,48 +74,44 @@ public class PeerStub implements Peer,Runnable {
 						break;
 						
 					case "SEARCH":
-						id=(Integer)obis.readObject();
 						String query=(String)obis.readObject();
-						System.out.println("Remote Search:" + query);
-						obos.writeObject(id);
 						obos.writeObject(sp.searchFile(query));
 						break;
 						
 					case "DOWNLOAD":
-						id=(Integer)obis.readObject();
 						String dest=(String)obis.readObject();
 						dest.concat(s.getInetAddress().getHostAddress()); //address now becomes= IP:port
 						checksum=(String)obis.readObject();
 						Integer sessionID=(Integer)obis.readObject();
 						response=sp.downloadFile(dest,checksum,sessionID);
-						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						break;
 					
 					case "FCHANGE":
-						id=(Integer)obis.readObject();
 						String fileName = (String)obis.readObject();
 						Long fileSize=(Long)obis.readObject();
 						checksum=(String)obis.readObject();
 						int stat=(Integer)obis.readObject();
 						response=sp.fileChanged(nick, fileName, fileSize, checksum, stat);
-						obos.writeObject(id);
 						obos.writeObject(new Boolean(response));
 						break;
-				
+
+					case "GETFINFO":
+						checksum=(String)obis.readObject();
+						FileInfo fi=sp.getFileInfo(checksum);
+						obos.writeObject(fi);
+						break;
+						
+					/*###### Peer's Response for Callback RPC#############*/
 					case "UPLOADBLOCKREPLY":
 						Boolean resp1=(Boolean)obis.readObject();
 						try {
-							respBuf.offer(resp1, 5, TimeUnit.SECONDS);
+							System.out.println("S:Response producing");
+							respBuf.put(resp1);
+							System.out.println("S:Response produced");
 						} catch (InterruptedException e) {}
 						break;
-					case "GETFINFO":
-						id=(Integer)obis.readObject();
-						checksum=(String)obis.readObject();
-						FileInfo fi=sp.getFileInfo(checksum);
-						obos.writeObject(id);
-						obos.writeObject(fi);
-						break;
+						
 					default:
 						System.out.println("No method matching:" + ch);
 						break;
@@ -130,34 +123,33 @@ public class PeerStub implements Peer,Runnable {
 			}//while
 			
 		} catch (SocketException e) {
-			// Connection lost
 			System.out.println("Connection lost with :" + nick);
-			//e.printStackTrace();
 			sp.register(this, false); //Remove this peer from list of peers....This thread dies here
-			try {s.close();
-			} catch (IOException e1) {	}
+			try {s.close();	} catch (IOException e1) {	}
 			
-		} catch(IOException e){
-			e.printStackTrace();
-		}
-	}
+		} catch(IOException e){ e.printStackTrace();}
+	}//run()
 
 	
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest){
-		Boolean b;
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest,int sessionID){
+		Boolean b=false;
+		System.out.println("Asking " + this + " to upload");
 		try {
 			obos.writeObject(new String("UPLOADBLOCK"));
 			obos.writeObject(strfi);
 			obos.writeObject(new Integer(blkfrm));
 			obos.writeObject(new Integer(blkto));
 			obos.writeObject(dest);
+			obos.writeObject(new Integer(sessionID));
 			
-			b=(Boolean)respBuf.take();
-			
-		} catch (IOException | InterruptedException e) {
+			try{
+				System.out.println("S:Response consumer waiting");
+				b=(Boolean)respBuf.take();
+				System.out.println("S:Response consumed");
+			}catch(InterruptedException e){}
+		} catch (IOException e) {
 			e.printStackTrace();
-			b=false;
 		}
 		return b;
 	}

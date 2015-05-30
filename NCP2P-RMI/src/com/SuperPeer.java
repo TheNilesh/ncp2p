@@ -1,6 +1,5 @@
 package com;
 
-import java.net.SocketAddress;
 import java.util.HashSet;
 
 public interface SuperPeer {

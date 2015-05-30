@@ -81,7 +81,7 @@ public class SuperPeerImpl implements SuperPeer {
 		}
 		
 		int eqJ=blkcnt/scnt;	//equal Job
-		System.out.println("BLOCK COUNT: " + blkcnt + " EqJ:" + eqJ + "scnt:" + scnt );
+		System.out.println("BLOCK COUNT: " + blkcnt + " EqJ:" + eqJ + "  scnt:" + scnt );
 		int exJ=blkcnt % eqJ;	//extra Job
 		
 		
@@ -101,7 +101,9 @@ public class SuperPeerImpl implements SuperPeer {
 			if(p==null){ //worst case, if peer unregistered
 				
 			}else{
-				p.uploadBlock(fi.getChecksum(),blkfrm,blkto,dest);
+				//TODO: Fix this
+				p.uploadBlock(fi.getChecksum(),blkfrm,blkto,dest,sessionID); //This method should not block current control, it blocks only if requestor already have file.
+
 				System.out.println(p.toString() + "--> FROM:" + blkfrm + " TO:" + blkto);
 			}
 			
@@ -109,7 +111,7 @@ public class SuperPeerImpl implements SuperPeer {
 				//Ignore other sources
 				break;
 			}
-			blkfrm=blkto+1;
+			blkfrm=blkto;
 		}
 		
 		return success;

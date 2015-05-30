@@ -23,26 +23,28 @@ public class DownloadManager {
 	DownloadManager(PeerImpl proc,int port) throws SocketException{
 		this.proc=proc;
 		downloads=new Hashtable<Integer,Download>();
+		uploads=new Hashtable<Integer,Upload>();
 		connFlag=true;
 		ds=new DatagramSocket(port);
 	}
 	
 	Download addDownload(FileInfo fi,File localfile, int sessionID){
-		//try{
-				//Download d=new Download(this,localfile,sessionID);
+		try{
+				Download d=new Download(this,fi,localfile,sessionID);
 				System.out.println("Download added "+ fi.toString() + " : " + localfile + " SessionID:" + sessionID);
-				//downloads.put(new Integer(sessionID), d);
-				//return d;
-		//	}catch(SocketException e){
-		//		e.printStackTrace();
-		//}
+				downloads.put(sessionID, d);
+				return d;
+			}catch(SocketException e){
+				e.printStackTrace();
+			}
 		return null;
 	}
-
-	public void addUpload(FileInfo fi, File f, int sessionID){
-			Upload u=new Upload(this,fi,f,sessionID);
-			uploads.put(sessionID, u);
-			
+	
+	Upload addUpload(File f, String strfi, int blkfrm, int blkto, int sessionID) {
+		Upload u=new Upload(this,f,blkfrm,blkto,sessionID);
+		uploads.put(sessionID,u);
+		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID);
+		return u;
 	}
 	
 	public void setComplete(Download d, boolean b, FileInfo fi) {
@@ -102,5 +104,10 @@ public class DownloadManager {
 	public int getPort() {
 		// TODO Auto-generated method stub
 		return ds.getLocalPort();
+	}
+
+	public void startUpload(int sessionID) {
+		Upload u=uploads.get(new Integer(sessionID));
+		u.startUpload();
 	}
 }

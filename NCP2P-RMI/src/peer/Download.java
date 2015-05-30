@@ -44,41 +44,8 @@ public class Download{
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-	//		ds=new DatagramSocket();
 		}
-		/*
-		public void startDownload(){
-			thread=new Thread(this);
-			thread.start();
-		}
-		*/
 
-/*		public void run(){
-			try{
-				createNullFile();
-				listen();
-			}catch(IOException e){
-				e.printStackTrace();
-			}
-		}
-		
-		void listen(){
-			byte buf[]=new byte[Constants.BLOCK_SIZE + 20];	//18 bytes header
-			DatagramPacket p=new DatagramPacket(buf,buf.length);
-			try{
-				while(!downloadComplete)
-				{
-					System.out.println("Listening");
-					ds.receive(p);
-					byte[] temp=p.getData();	//array length is = buf.length, so we need another smaller array exactly = size of data
-					byte[] packet= new byte[p.getLength()];
-					System.arraycopy(temp,0,packet,0,p.getLength());
-					System.out.println("Message[" + p.getLength() + "]: ");	//incoming message
-					unmarshal(packet);
-				 }//while
-		 	}catch(Exception ex){System.out.println(ex);}
-		}//listen
-	*/
 		void unmarshal(byte[] packet){
 			//split header and call storeToFile
 			byte[]payload = null;

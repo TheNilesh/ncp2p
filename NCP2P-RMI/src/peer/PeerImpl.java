@@ -33,7 +33,7 @@ public class PeerImpl implements Peer {
 		
 		files=new TwoWayHashMap<String,File>();
 		
-		nick="PeerN" + new Random().nextInt(10);
+		nick="Peer" + new Random().nextInt(10);
 		sp=new SuperPeerStub(this,"localhost",4012);
 		
 		spThrd=new Thread((Runnable) sp); //? Runnable
@@ -44,9 +44,10 @@ public class PeerImpl implements Peer {
 		
 		
 		try{
-			shareDir=new File("E:\\TEST3");
+			shareDir=new File("E:\\TEST1");
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
+			watcherThread.start();
 		}catch(IOException ex){
 			System.out.println("Unable to start file watch Service");
 		}
@@ -68,20 +69,12 @@ public class PeerImpl implements Peer {
 			strfi = files.getBackward((File)f);
 			files.remove(strfi);
 		}else if(stat==FileInfo.CREATE){
-			try {
-				strfi=d.calculateMD5(f);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			strfi=d.calculateMD5(f);
 			files.put(strfi,(File)f);
 		}else if(stat==FileInfo.MODIFY){
 			strfi=files.getBackward((File)f); //old mapping
 			files.remove(strfi);			//remove old mapping
-			try {
-				strfi=d.calculateMD5(f);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			strfi=d.calculateMD5(f);
 			files.put(strfi,(File)f);	//add new mapping
 		}
 
@@ -92,6 +85,13 @@ public class PeerImpl implements Peer {
 	}
 	
 	void downloadFile(String checksum,String localName){
+		
+		File f=files.getForward(checksum);
+		if(f!=null){
+			System.out.println("You already have this file saved as "+ f.getName());
+			return;
+		}
+		
 		FileInfo fi=sp.getFileInfo(checksum);
 		if(fi==null){
 			System.out.println("File not available!");
@@ -101,11 +101,15 @@ public class PeerImpl implements Peer {
 		String dest=":" + dport; //superpeer will fill first part
 		int sessionID=new Random().nextInt();
 
-		File f=new File(shareDir + "\\" +  localName);
+		f=new File(shareDir + "\\" +  localName);
 		if(dport!=0 && dport!=-1){
 			dm.addDownload(fi, f, sessionID); //local representative of this download
-			sp.downloadFile(dest,checksum,sessionID);
-			//TODO: fix this situation without adding more remote Calls
+			boolean b=sp.downloadFile(dest,checksum,sessionID);
+			if(b==true){
+				System.out.println("Server initiated download");
+			}else{
+				System.out.println("Server failed to initiate download");
+			}
 		}else{
 			System.out.println("Download failed, local endpoint is not ready!");
 		}
@@ -139,17 +143,21 @@ public class PeerImpl implements Peer {
 	
 	//****************TO BE CALLED by SERVER **************
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest) {
-		// This function will be called by remote server
-	//	FileInfo fi=files.get(strfi);
-	//	if(fi==null){
-	//		return false;
-	//	}
-	//	//somehow get File from checksum recvd, and then give it to upload
-	//	boolean b=dm.addUpload(fi, f, sessionID);
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest,int sessionID) {
+		File f=files.getForward(strfi);
+		if(f==null){
+			return false;
+		}
+		
+		Upload u=dm.addUpload(f,strfi,blkfrm,blkto, sessionID);
+		if(u==null){
+			return false;
+		}
+		
+		dm.startUpload(sessionID);							//This should be point of fork, so that immediate response can be returned to server
 		System.out.println("UPLOADing:" + strfi + " : " + blkfrm + "-->"+ blkto + " to " + dest);
 		
-		return false;
+		return true;
 	}
 	
 	@Override

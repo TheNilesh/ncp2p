@@ -148,11 +148,11 @@ if(kind==ENTRY_CREATE){
 	//	System.out.format("%s: %s\n", event.kind().name(), child);
 		peer.fileChanged(child.toFile(), FileInfo.MODIFY);
 	}
+	lastModi=child.toFile().lastModified();
 }else if(kind==ENTRY_DELETE){
 	//System.out.format("%s: %s\n", event.kind().name(), child);
 	peer.fileChanged(child.toFile(), FileInfo.DELETE);
 }
-	lastModi=child.toFile().lastModified();
 
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
