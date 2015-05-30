@@ -3,11 +3,10 @@ package speer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
 
 import com.FileInfo;
 import com.Peer;
@@ -79,8 +78,7 @@ public class PeerStub implements Peer,Runnable {
 						break;
 						
 					case "DOWNLOAD":
-						String dest=(String)obis.readObject();
-						dest.concat(s.getInetAddress().getHostAddress()); //address now becomes= IP:port
+						InetSocketAddress dest=(InetSocketAddress)obis.readObject();
 						checksum=(String)obis.readObject();
 						Integer sessionID=(Integer)obis.readObject();
 						response=sp.downloadFile(dest,checksum,sessionID);
@@ -132,7 +130,7 @@ public class PeerStub implements Peer,Runnable {
 
 	
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest,int sessionID){
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,InetSocketAddress dest,int sessionID){
 		Boolean b=false;
 		System.out.println("Asking " + this + " to upload");
 		try {

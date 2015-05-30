@@ -2,11 +2,12 @@ package peer;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Vector;
 
 import com.DigestCalc;
 import com.FileInfo;
@@ -23,15 +24,16 @@ public class PeerImpl implements Peer {
 	
 	public File shareDir;
 	private WatchDir watcher;
-	private Thread watcherThread;
 	
 	private DownloadManager dm;
 	
 	private TwoWayHashMap<String,File> files; //mapping from filename to md5
+	private Vector<File> ignored;
 	
 	public PeerImpl(){
 		
 		files=new TwoWayHashMap<String,File>();
+		ignored=new Vector<File>();
 		
 		nick="Peer" + new Random().nextInt(10);
 		sp=new SuperPeerStub(this,"localhost",4012);
@@ -44,12 +46,13 @@ public class PeerImpl implements Peer {
 		
 		
 		try{
-			shareDir=new File("E:\\TEST1");
+			shareDir=new File("E:\\TEST2");
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
 			watcherThread.start();
+			
 		}catch(IOException ex){
-			System.out.println("Unable to start file watch Service");
+			System.out.println("Unable to start directory watch Service");
 		}
 		
 		int udpport=5012;
@@ -65,6 +68,9 @@ public class PeerImpl implements Peer {
 		String strfi=null;
 		DigestCalc d=new DigestCalc();
 
+		if(ignored.contains(f)){ //file is being downloaded
+			return;
+		}
 		if(stat==FileInfo.DELETE){
 			strfi = files.getBackward((File)f);
 			files.remove(strfi);
@@ -97,21 +103,19 @@ public class PeerImpl implements Peer {
 			System.out.println("File not available!");
 			return;
 		}
-		int dport=dm.getPort();
-		String dest=":" + dport; //superpeer will fill first part
+		
 		int sessionID=new Random().nextInt();
-
+		
 		f=new File(shareDir + "\\" +  localName);
-		if(dport!=0 && dport!=-1){
-			dm.addDownload(fi, f, sessionID); //local representative of this download
-			boolean b=sp.downloadFile(dest,checksum,sessionID);
-			if(b==true){
-				System.out.println("Server initiated download");
-			}else{
-				System.out.println("Server failed to initiate download");
-			}
+		ignored.add(f);
+		
+		dm.addDownload(fi, f, sessionID); //local representative of this download
+		
+		boolean b=sp.downloadFile(dm.getExternalAddress(),checksum,sessionID);
+		if(b==true){
+			System.out.println("Server initiated download");
 		}else{
-			System.out.println("Download failed, local endpoint is not ready!");
+			System.out.println("Server failed to initiate download");
 		}
 	}
 	
@@ -143,13 +147,13 @@ public class PeerImpl implements Peer {
 	
 	//****************TO BE CALLED by SERVER **************
 	@Override
-	public boolean uploadBlock(String strfi,int blkfrm,int blkto,String dest,int sessionID) {
+	public boolean uploadBlock(String strfi,int blkfrm,int blkto,InetSocketAddress dest,int sessionID) {
 		File f=files.getForward(strfi);
 		if(f==null){
 			return false;
 		}
 		
-		Upload u=dm.addUpload(f,strfi,blkfrm,blkto, sessionID);
+		Upload u=dm.addUpload(f,strfi,blkfrm,blkto, sessionID,dest);
 		if(u==null){
 			return false;
 		}

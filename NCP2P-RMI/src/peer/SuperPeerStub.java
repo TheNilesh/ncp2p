@@ -3,17 +3,16 @@ package peer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
 
 import com.FileInfo;
 import com.Peer;
 import com.SuperPeer;
-import com.TransferMap;
 
 public class SuperPeerStub implements SuperPeer,Runnable{
 /* Peer Side Representative of SuperPeer
@@ -97,11 +96,12 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	}
 
 	@Override
-	public boolean downloadFile(String sa, String checksum,int sessionID) {
+	public boolean downloadFile(InetSocketAddress sa, String checksum,int sessionID) {
 		boolean response=false;
 		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("DOWNLOAD"));
+			System.out.println("Writing Inet"+ sa);
 			obos.writeObject(sa);
 			obos.writeObject(checksum);
 			obos.writeObject(new Integer(sessionID));
@@ -182,13 +182,13 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 						String strfi=(String)obis.readObject();
 						Integer blkfrm=(Integer)obis.readObject();
 						Integer blkto=(Integer)obis.readObject();
-						String dest=(String)obis.readObject();
+						InetSocketAddress dest=(InetSocketAddress)obis.readObject();
 						Integer sessionID=(Integer)obis.readObject();
 						Boolean b1=(Boolean)p.uploadBlock(strfi, blkfrm, blkto, dest,sessionID);
-						System.out.println("Writing back to server");
+						//System.out.println("Writing back to server");
 						obos.writeObject(new String("UPLOADBLOCKREPLY"));
 						obos.writeObject(b1);
-						System.out.println("Written back to server");
+						//System.out.println("Written back to server");
 						break;
 					case "RESPONSE":
 						try {

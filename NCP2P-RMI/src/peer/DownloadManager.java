@@ -6,7 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketAddress;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.Hashtable;
 
@@ -18,6 +19,7 @@ public class DownloadManager {
 	Hashtable<Integer,Upload> uploads;
 	PeerImpl proc;
 	DatagramSocket ds;
+	InetSocketAddress myaddress;
 	boolean connFlag;
 	
 	DownloadManager(PeerImpl proc,int port) throws SocketException{
@@ -26,6 +28,7 @@ public class DownloadManager {
 		uploads=new Hashtable<Integer,Upload>();
 		connFlag=true;
 		ds=new DatagramSocket(port);
+		loadMyAddress("127.0.0.1",5478); //contact STUN server
 	}
 	
 	Download addDownload(FileInfo fi,File localfile, int sessionID){
@@ -40,10 +43,11 @@ public class DownloadManager {
 		return null;
 	}
 	
-	Upload addUpload(File f, String strfi, int blkfrm, int blkto, int sessionID) {
-		Upload u=new Upload(this,f,blkfrm,blkto,sessionID);
+	Upload addUpload(File f, String strfi, int blkfrm, int blkto, int sessionID,InetSocketAddress dest) {
+
+		Upload u=new Upload(this,f,blkfrm,blkto,sessionID,dest);
 		uploads.put(sessionID,u);
-		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID);
+		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID  + " to " + dest);
 		return u;
 	}
 	
@@ -55,7 +59,38 @@ public class DownloadManager {
 		}
 	}
 	
+	InetSocketAddress getExternalAddress(){
+		return myaddress;
+	}
 	
+	void loadMyAddress(String stunip,int stunport){
+		byte[] tmp=new byte[1024];
+		DatagramPacket dp;
+		try {
+			InetAddress ia=InetAddress.getByName(stunip);
+			dp = new DatagramPacket(tmp,0,tmp.length,ia,stunport);
+			ds.send(dp);
+			ds.setSoTimeout(2000);
+			ds.receive(dp);
+			tmp=dp.getData();
+			String t1=(new String(tmp)).trim();
+			String t2[]=t1.split(":");
+			
+			if(t2.length<2){
+				myaddress=new InetSocketAddress(InetAddress.getLocalHost(),ds.getLocalPort());
+				System.out.println("Error getting IP:PORT Assumed:" + myaddress);
+				return;
+			}
+			
+			String ip=t2[0];
+			int port=Integer.parseInt(t2[1]);
+			myaddress=new InetSocketAddress(ip,port);
+			System.out.println("Got external address:" + ip + ":" + port);
+		} catch (IOException e) {
+			System.out.println("Error getting IP:PORT");
+			e.printStackTrace();
+		}
+	}
 	
 	/*Downloader listens on UDP ######################################### */
 	public void run(){

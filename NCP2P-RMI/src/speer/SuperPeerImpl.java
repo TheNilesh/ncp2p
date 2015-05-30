@@ -1,6 +1,7 @@
 package speer;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -16,6 +17,7 @@ public class SuperPeerImpl implements SuperPeer {
 	private transient Hashtable<String,Peer> peers;
 	private transient ConcurrentHashMap<String,FileInfo> files;
 	private SPServer server;
+	private STUNServer stun;
 	
 	public static void main(String args[]){
 		try{
@@ -26,9 +28,11 @@ public class SuperPeerImpl implements SuperPeer {
 	}
 	
 	public SuperPeerImpl() throws IOException{
+		
 		peers=new Hashtable<String,Peer>();
 		files=new ConcurrentHashMap<String,FileInfo>();
 		server=new SPServer(this,4012);
+		stun=new STUNServer(5478);
 	}
 	
 	@Override
@@ -64,7 +68,7 @@ public class SuperPeerImpl implements SuperPeer {
 
 
 	@Override
-	public boolean downloadFile(String dest,String checksum,int sessionID) {
+	public boolean downloadFile(InetSocketAddress dest,String checksum,int sessionID) {
 		System.out.println("SP.downloadFile()");
 		if(!files.containsKey(checksum)){
 			return false;
