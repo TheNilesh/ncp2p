@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -90,22 +91,18 @@ public class Upload implements Runnable{
 	
 	boolean send(int blknum, byte[]payload){
 		ByteArrayOutputStream baos=new ByteArrayOutputStream();
-		baos.write(sessionID); //TODO:problem actually byte is written; not int
-		baos.write(blknum);		//index of block
-		try {
+		try{
+			baos.write(sessionID); //session identifying 
+			baos.write(blknum);		//index of block
 			baos.write(payload);	//actual data
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		byte[] packet=baos.toByteArray();
-		DatagramPacket dp=new DatagramPacket(packet,packet.length);
-		try {
-			ds.send(dp);
-			ds.receive(dp);		//wait for max 3 seconds
-			//ACK recvd
-			return true;
-		}catch(SocketTimeoutException se){
+			
+			byte[] packet=baos.toByteArray();
+			DatagramPacket dp=new DatagramPacket(packet,packet.length);
+				ds.send(dp);
+				ds.receive(dp);		//wait for max 3 seconds
+				//ACK recvd
+				return true;
+			}catch(SocketTimeoutException se){
 			System.out.println("ACK not received. Cancelling transfer.");
 			return false;
 		} catch (IOException e) {

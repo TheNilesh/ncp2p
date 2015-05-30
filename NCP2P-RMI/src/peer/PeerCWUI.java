@@ -11,7 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-public class PeerUI {
+public class PeerCWUI {
 
 	PeerImpl p;
 	private JFrame appWindow;
@@ -24,7 +24,7 @@ public class PeerUI {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					PeerUI window = new PeerUI();
+					PeerCWUI window = new PeerCWUI();
 					window.appWindow.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -36,7 +36,7 @@ public class PeerUI {
 	/**
 	 * Create the application.
 	 */
-	public PeerUI() {
+	public PeerCWUI() {
 		initialize();
 	}
 

@@ -123,7 +123,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	public synchronized boolean register(Peer p, boolean status) {
 		boolean response=false;
 		while(!connFlag); //wait for connect
-		System.out.println("SPS:register()");
+		//System.out.println("SPS:register()");
 		try {
 			obos.writeObject(new String("REG"));
 			obos.writeObject(p.toString());
@@ -173,7 +173,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 					System.out.println("Recvd:" + obj);
 					if(obj instanceof String){
 						ch=(String)obj;
-						System.out.println("Server : " + ch);
+				//		System.out.println("Server : " + ch);
 					}
 					
 					switch(ch){ //check the type of Response
@@ -192,9 +192,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 						break;
 					case "RESPONSE":
 						try {
-							System.out.println("Response produced");
+							//System.out.println("Response produced");
 							respBuf.put(obj);
-							System.out.println("Response consumed");
+							//System.out.println("Response consumed");
 						} catch (InterruptedException e) {e.printStackTrace();}
 						break;
 					}

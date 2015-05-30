@@ -1,5 +1,12 @@
 package com;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+
 public class Constants {
 	public static final int BLOCK_SIZE=65000;
 	public static final int PORT=4689;
@@ -24,5 +31,23 @@ public class Constants {
 	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 	    }
 	    return new String(hexChars);
+	}
+	
+	public static byte[] intToBytes(int my_int) throws IOException {
+	    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	    ObjectOutput out = new ObjectOutputStream(bos);
+	    out.writeInt(my_int);
+	    out.close();
+	    byte[] int_bytes = bos.toByteArray();
+	    bos.close();
+	    return int_bytes;
+	}
+	
+	public static int bytesToInt(byte[] int_bytes) throws IOException {
+	    ByteArrayInputStream bis = new ByteArrayInputStream(int_bytes);
+	    ObjectInputStream ois = new ObjectInputStream(bis);
+	    int my_int = ois.readInt();
+	    ois.close();
+	    return my_int;
 	}
 }

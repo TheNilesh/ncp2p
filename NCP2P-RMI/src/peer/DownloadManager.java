@@ -3,6 +3,7 @@ package peer;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -14,7 +15,7 @@ import java.util.Hashtable;
 import com.Constants;
 import com.FileInfo;
 
-public class DownloadManager {
+public class DownloadManager implements Runnable {
 	Hashtable<Integer,Download> downloads;
 	Hashtable<Integer,Upload> uploads;
 	PeerImpl proc;
@@ -26,20 +27,33 @@ public class DownloadManager {
 		this.proc=proc;
 		downloads=new Hashtable<Integer,Download>();
 		uploads=new Hashtable<Integer,Upload>();
-		connFlag=true;
+		connFlag=false;
 		ds=new DatagramSocket(port);
-		loadMyAddress("127.0.0.1",5478); //contact STUN server
+		myaddress=null;
 	}
 	
 	Download addDownload(FileInfo fi,File localfile, int sessionID){
 		try{
 				Download d=new Download(this,fi,localfile,sessionID);
-				System.out.println("Download added "+ fi.toString() + " : " + localfile + " SessionID:" + sessionID);
 				downloads.put(sessionID, d);
+				System.out.println("Download added "+ fi.toString() + " : " + localfile + " SessionID:" + sessionID);
+				
+				//Get Address
+				if(myaddress==null){
+					loadMyAddress("127.0.0.1",5478); //contact STUN server
+				}
+				
+				//start listening
+				if(connFlag==false){ //id dm is idle, because no active download
+					connFlag=true;
+					new Thread(this).start();	//start listening
+				}
 				return d;
-			}catch(SocketException e){
-				e.printStackTrace();
-			}
+		}catch (FileNotFoundException e2){
+			e2.printStackTrace();
+		}catch(SocketException e1){
+				e1.printStackTrace();
+		}
 		return null;
 	}
 	
@@ -49,14 +63,6 @@ public class DownloadManager {
 		uploads.put(sessionID,u);
 		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID  + " to " + dest);
 		return u;
-	}
-	
-	public void setComplete(Download d, boolean b, FileInfo fi) {
-		System.out.println("Download Complete :" + d.fi.name + " Success?:" + b);
-		if(b==true){
-	//		proc.downloadComplete(d.f);
-			//remove from downloads
-		}
 	}
 	
 	InetSocketAddress getExternalAddress(){
@@ -70,8 +76,9 @@ public class DownloadManager {
 			InetAddress ia=InetAddress.getByName(stunip);
 			dp = new DatagramPacket(tmp,0,tmp.length,ia,stunport);
 			ds.send(dp);
-			ds.setSoTimeout(2000);
+			ds.setSoTimeout(5000);
 			ds.receive(dp);
+			ds.setSoTimeout(0); //after this wait indefinitely
 			tmp=dp.getData();
 			String t1=(new String(tmp)).trim();
 			String t2[]=t1.split(":");
@@ -93,6 +100,7 @@ public class DownloadManager {
 	}
 	
 	/*Downloader listens on UDP ######################################### */
+	@Override
 	public void run(){
 		try{
 				listen();
@@ -106,31 +114,39 @@ public class DownloadManager {
 		byte[] tmp1="ACK".getBytes();
 		DatagramPacket dpACK = new DatagramPacket(tmp1,tmp1.length);
 		DatagramPacket p=new DatagramPacket(buf,buf.length);
-			while(!connFlag)
+			while(connFlag)
 			{
 				System.out.println("Listening");
 				ds.receive(p);
 				byte[] temp=p.getData();	//array length is = buf.length, so we need another smaller array exactly = size of data
-				byte[] packet= new byte[p.getLength()];
+				
+				byte[] packet= new byte[p.getLength()];		//sessionID removed
 				System.arraycopy(temp,0,packet,0,p.getLength());
-				if(processData(packet)){ //send ACK back
+				//System.out.println("Recvied UDP:" + new String(packet));
+				if(processPacket(packet)){	//if packet is valid
+					System.out.println("Sending ACK back");
 					dpACK.setSocketAddress(p.getSocketAddress());
 					ds.send(dpACK);
+				}else{
+					System.out.println("Invalid packet.. rejected");
 				}
 			 }//while
 	}//listen
 	
-	boolean processData(byte[] packet){
-		ByteArrayInputStream bis=new ByteArrayInputStream(packet);
-		int sessionID=bis.read();
-		Download d=downloads.get(new Integer(sessionID)); //Map with actual download
-		if(d==null){
+	boolean processPacket(byte[] packet){
+		
+		ByteArrayInputStream bais=new ByteArrayInputStream(packet);
+		int sessionID=bais.read();
+		System.out.println("Packet SessionID:" + sessionID);
+		Download d=downloads.get(new Integer(sessionID));
+		if(d==null){ 			//No sessionID available
 			return false;
 		}
+		
 		(new Thread(){
-			public void run(){
-				d.unmarshal(packet);
-			}
+				public void run(){
+					d.unmarshal(packet);
+				}
 		}).start();
 		
 		return true;

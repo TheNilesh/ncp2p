@@ -37,13 +37,14 @@ public class SuperPeerImpl implements SuperPeer {
 	
 	@Override
 	public boolean fileChanged(String p, String fileName, long fileSize, String checksum, int stat) {
-		System.out.println("SP.fileChanged()");
+		System.out.println("SP.fileChanged():" + fileName);
 		boolean response=false;
 		FileInfo fi;
 		if(stat==FileInfo.CREATE){
 			if(files.containsKey(checksum)){  //already Available
 				fi=files.get(checksum);
 				fi.addSeeder(p);
+				fi.attachTag(fileName);
 				response=true;
 			}else{
 				fi=new FileInfo(fileName,fileSize,checksum); //new Unique

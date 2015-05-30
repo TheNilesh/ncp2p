@@ -27,7 +27,7 @@ public class PeerImpl implements Peer {
 	
 	private DownloadManager dm;
 	
-	private TwoWayHashMap<String,File> files; //mapping from filename to md5
+	private TwoWayHashMap<String,File> files; //mapping from filename to md5 and vice versa
 	private Vector<File> ignored;
 	
 	public PeerImpl(){
@@ -46,7 +46,7 @@ public class PeerImpl implements Peer {
 		
 		
 		try{
-			shareDir=new File("E:\\TEST2");
+			shareDir=new File("E:\\TEST3");
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
 			watcherThread.start();
@@ -104,12 +104,13 @@ public class PeerImpl implements Peer {
 			return;
 		}
 		
-		int sessionID=new Random().nextInt();
+		int sessionID=new Random().nextInt(255);
 		
 		f=new File(shareDir + "\\" +  localName);
 		ignored.add(f);
 		
 		dm.addDownload(fi, f, sessionID); //local representative of this download
+
 		
 		boolean b=sp.downloadFile(dm.getExternalAddress(),checksum,sessionID);
 		if(b==true){
