@@ -97,15 +97,6 @@ public class FileInfo implements Serializable{
 		return len;
 	}
 	
-	public byte[] getBlocks(){ //sparse matrix for blocks o file
-		int fileSize=(int)len;
-//		int BlkCnt=fileSize/Constants.BLOCK_SIZE;
-//		BlkCnt=BlkCnt+ (fileSize%Constants.BLOCK_SIZE == 0?0:1);
-	//	byte[]blk =new byte[BlkCnt];
-//		return blk;
-		return null;
-	}
-	
 	public int getBlocksCount(){
 		int fileSize=(int)len;
 		int blkCnt=fileSize/Constants.BLOCK_SIZE;

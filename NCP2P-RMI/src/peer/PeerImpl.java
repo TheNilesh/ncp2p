@@ -18,6 +18,7 @@ import com.TwoWayHashMap;
 public class PeerImpl implements Peer {
 
 	public String nick;
+	public View view;
 	
 	SuperPeer sp;
 	Thread spThrd;
@@ -96,6 +97,7 @@ public class PeerImpl implements Peer {
 		
 		File f=files.getForward(checksum);
 		if(f!=null){
+			view.showMessage("You already have this file saved as "+ f.getName());
 			System.out.println("You already have this file saved as "+ f.getName());
 			return;
 		}
@@ -113,39 +115,51 @@ public class PeerImpl implements Peer {
 		
 		dm.addDownload(fi, f, sessionID); //local representative of this download
 
-		
 		boolean b=sp.downloadFile(dm.getExternalAddress(),checksum,sessionID);
 		if(b==true){
-			System.out.println("Server initiated download");
+			System.out.println("SuperPeer initiated download");
+			view.showMessage("SuperPeer initiated download");
 		}else{
-			System.out.println("Server failed to initiate download");
+			System.out.println("SuperPeer failed to initiate download");
 		}
 	}
 	
-	void searchFile(String query){
+	String[][] searchFile(String query){
 
 		HashSet<FileInfo> searchResult=sp.searchFile(query);
+		int resCnt=searchResult.size();
+		String[][] strRes=new String[resCnt][5];
+		int i=0;
 		
 		Iterator<FileInfo> iter = searchResult.iterator();
 		while(iter.hasNext()){
 			 	FileInfo fi = iter.next();
 			 	//name tags checksum length, seeders
 				System.out.format("%25s\t%10dKB\t%16s\t",fi.toString(), fi.getLen(), fi.getChecksum());
+				strRes[i][0]=fi.toString();
+				strRes[i][2]="" + fi.getLen();
+				strRes[i][4]=fi.getChecksum();
+				
+				
 				Iterator<String> tit=fi.getTags().iterator();
 				while(tit.hasNext()){
 					String s=tit.next();
 					System.out.format("%s,",s);
+					strRes[i][1]=s + ", ";
 				}
+				
 				System.out.format("\t");
 				Iterator<String> pit=fi.getSeeders().iterator();
 				while(pit.hasNext()){
 					String p=pit.next();
 					System.out.format("%s,",p);
+					strRes[i][3]=p + ", ";
 				}
+				i++;
 				System.out.println();
 				
 		}
-		
+		return strRes;
 	}
 	
 	//****************TO BE CALLED by SERVER **************
@@ -176,5 +190,9 @@ public class PeerImpl implements Peer {
 		boolean b=ignored.remove(f);
 		System.out.println("UNIGNORE:" + b + " Download Complete " + f.getName());
 		fileChanged(f,FileInfo.CREATE);
+	}
+	
+	public void setView(View v){
+		view=v;
 	}
 }

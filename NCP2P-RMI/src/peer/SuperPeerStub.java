@@ -3,6 +3,7 @@ package peer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -23,22 +24,24 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	Socket s;
 	String site;
 	int port;
+	enum State{CONNECTED,DISCONNECTED,FAILED,IDLE};
+	State state;
 	
 	PeerImpl p;
+	
 	ObjectOutputStream obos;
 	ObjectInputStream obis;
 	boolean connFlag;
 	
 	SynchronousQueue<Object> respBuf;
-	Object lock;
-	
+
 	public SuperPeerStub(PeerImpl p, String site,int port){
 		this.site=site;
 		this.port=port;
 		this.p=p;
 		respBuf=new SynchronousQueue<Object>();
-		lock=new Object(); //who holds this object can only enter communication
 		r=new Random();
+		state=State.IDLE;
 	}
 	
 	private void initConnection(){
@@ -48,6 +51,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			obos=new ObjectOutputStream(s.getOutputStream());
 			obis=new ObjectInputStream(s.getInputStream());
 			connFlag=true;
+		}catch(ConnectException e){
+			state=State.IDLE;
+			System.out.println("Failed to connect Superpeer.:Unreachable ");
 		} catch (IOException e) {
 			e.printStackTrace();
 			//execute alternate SuperPeer connection
