@@ -31,8 +31,9 @@ public class PeerImpl implements Peer {
 	private TwoWayHashMap<String,File> files; //mapping from filename to md5 and vice versa
 	private Vector<File> ignored;
 	
-	public PeerImpl(){
+	public PeerImpl(View v){
 		
+		this.view=v;
 		files=new TwoWayHashMap<String,File>();
 		ignored=new Vector<File>();
 		
@@ -45,9 +46,10 @@ public class PeerImpl implements Peer {
 			nick="Peer" + new Random().nextInt(20);
 		};
 		
+		view.setInfo("PNAME",nick);
 		
 		try{
-			shareDir=new File("E:\\TEST3");
+			shareDir=new File("E:\\TEST1");
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
 			watcherThread.start();
@@ -189,10 +191,7 @@ public class PeerImpl implements Peer {
 	public void downloadComplete(File f) {
 		boolean b=ignored.remove(f);
 		System.out.println("UNIGNORE:" + b + " Download Complete " + f.getName());
+		view.showMessage("Download complete :" + f.getName());
 		fileChanged(f,FileInfo.CREATE);
-	}
-	
-	public void setView(View v){
-		view=v;
 	}
 }

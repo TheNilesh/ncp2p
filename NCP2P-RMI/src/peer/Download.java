@@ -55,10 +55,11 @@ public class Download{
 				if(flags[blockNumber]==0){
 					storeToFile(blockNumber,payload);
 					blkgot++;
+					dm.p.view.updateProgress(sessionID,blkgot);
 				}
 				if(blkgot==blkcnt){
 					System.out.println("File received");
-					dm.downloadOver(sessionID);
+					dm.taskComplete(sessionID);
 					out.close();
 				}
 				

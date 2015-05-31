@@ -1,6 +1,8 @@
 package peer;
 
-import javax.swing.ImageIcon;
+import java.util.Hashtable;
+import java.util.Map;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -20,11 +22,14 @@ public class View {
 	private Controller c;
 	private JFrame frame;
 	
+	JLabel lblPeerName;
+	
 	JButton btnSearch;
 	private JTextField txtSearch;
 	private DefaultTableModel dftSearch;
 	JTable tblSearch;
 	
+	private DefaultTableModel dftTasks;
 	private JTable tblTasks;
 
 	public View() {
@@ -54,7 +59,7 @@ public class View {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
-		JLabel lblPeerName = new JLabel("Peer Name :");
+		lblPeerName= new JLabel("Peer Name :");
 		lblPeerName.setBounds(10, 11, 98, 14);
 		frame.getContentPane().add(lblPeerName);
 		
@@ -123,7 +128,30 @@ public class View {
 		scrTasks.setBounds(10, 11, 564, 252);
 		pnlTasks.add(scrTasks);
 		
-		tblTasks = new JTable();
+		dftTasks = new DefaultTableModel(){
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+			@Override
+		     public Class<?> getColumnClass(int column) {
+		        if (getRowCount() > 0) {
+		           Object value = getValueAt(0, column);
+		           if (value != null) {
+		              return getValueAt(0, column).getClass(); 
+		           }
+		        }
+		        return super.getColumnClass(column);
+		     }
+        };
+		dftTasks.addColumn("TYPE");
+		dftTasks.addColumn("File Name");
+		dftTasks.addColumn("Progress");
+		dftTasks.addColumn("sessionID");
+		
+		tblTasks = new JTable(dftTasks);
 		scrTasks.setViewportView(tblTasks);
 		
 		JPanel pnlSetting = new JPanel();
@@ -159,5 +187,37 @@ public class View {
 
 	public String getInputString(String string) {
 		return JOptionPane.showInputDialog(string);
+	}
+
+
+
+	public void addTask(String type, String name, int progress, int sessionID) {
+		Object[] rowData={type,name,new Integer(progress),new Integer(sessionID)};		
+		dftTasks.addRow(rowData);
+	}
+	
+	public void updateProgress(int sessionID, int progress) {
+		int i = getRow(sessionID);
+		if(i!=-1){
+			dftTasks.setValueAt(new Integer(progress), i, 3); //3 column=Progress
+		}
+	}
+	
+	private int getRow(int sessionID){
+		Integer id=new Integer(sessionID);
+		for(int i=0;i<dftTasks.getRowCount();i++){
+			if(dftTasks.getValueAt(i, 3).equals(id)){
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public void setInfo(String key, String value) {
+		switch(key){
+		case "PNAME":
+			lblPeerName.setText(value);
+			break;
+		}	
 	}
 }

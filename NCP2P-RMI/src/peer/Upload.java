@@ -72,8 +72,10 @@ public class Upload implements Runnable{
 			       //tmp is block to send
 			       if(send(i,tmp)==false){
 		    		   //sending failed, maybe receiver absent
+			    	   dm.p.view.updateProgress(sessionID,-1);
 		    		   return;
 		    	   }
+			       dm.p.view.updateProgress(sessionID,i-blkfrm);
 			   }//for loop
 		       
 		   }catch(IOException e){
@@ -101,6 +103,7 @@ public class Upload implements Runnable{
 				ds.send(dp);
 				ds.receive(dp);		//wait for max 3 seconds
 				//ACK recvd
+				
 				return true;
 			}catch(SocketTimeoutException se){
 			System.out.println("ACK not received. Cancelling transfer.");

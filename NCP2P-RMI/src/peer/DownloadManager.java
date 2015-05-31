@@ -37,6 +37,7 @@ public class DownloadManager implements Runnable {
 				Download d=new Download(this,fi,localfile,sessionID);
 				downloads.put(sessionID, d);
 				System.out.println("Download added "+ fi.toString() + " : " + localfile + " SessionID:" + sessionID);
+				p.view.addTask("DOWNLOAD",localfile.getName(),0,sessionID);
 				
 				//Get Address
 				if(myaddress==null){
@@ -62,10 +63,11 @@ public class DownloadManager implements Runnable {
 		Upload u=new Upload(this,f,blkfrm,blkto,sessionID,dest);
 		uploads.put(sessionID,u);
 		System.out.println("Upload added "+ f.getName() + " : " +strfi + " SessionID:" + sessionID  + " to " + dest);
+		p.view.addTask("UPLOAD",f.getName(),blkto-blkfrm,sessionID);
 		return u;
 	}
 	
-	void downloadOver(int sessionID){
+	void taskComplete(int sessionID){
 		
 		Download d=downloads.get(sessionID);
 		if(d!=null){
