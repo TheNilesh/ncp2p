@@ -38,7 +38,7 @@ public class PeerImpl implements Peer {
 		ignored=new Vector<File>();
 		
 		nick="Peer" + new Random().nextInt(10);
-		sp=new SuperPeerStub(this,"localhost",4012);
+		sp=new SuperPeerStub(this,"49.248.108.146",4689);
 		
 		spThrd=new Thread((Runnable) sp); //? Runnable
 		spThrd.start();

@@ -83,6 +83,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	
 	
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public HashSet<FileInfo> searchFile(String query) {
 		while(!connFlag); //wait for connect

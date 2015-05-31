@@ -16,7 +16,9 @@ public class SuperPeerImpl implements SuperPeer {
 
 	private transient Hashtable<String,Peer> peers;
 	private transient ConcurrentHashMap<String,FileInfo> files;
+	@SuppressWarnings("unused") //Creates thread, so no meaning unused
 	private SPServer server;
+	@SuppressWarnings("unused")	//Creates thread, so no meaning unused
 	private STUNServer stun;
 	
 	public static void main(String args[]){
@@ -31,8 +33,8 @@ public class SuperPeerImpl implements SuperPeer {
 		
 		peers=new Hashtable<String,Peer>();
 		files=new ConcurrentHashMap<String,FileInfo>();
-		server=new SPServer(this,4012);
-		stun=new STUNServer(5478);
+		server=new SPServer(this,4689);
+		stun=new STUNServer(4690);
 	}
 	
 	@Override

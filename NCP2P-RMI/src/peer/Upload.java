@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -118,12 +117,4 @@ public class Upload implements Runnable{
 		readAndSend();
 		
 	}
-	
-	public static void main(String args[]){
-		File f=new File("E:\\big.txt");
-		Upload u=new Upload(null,f,0,2,12,null);
-		u.readAndSend();
-		
-	}
-
 }

@@ -1,8 +1,5 @@
 package peer;
 
-import java.util.Hashtable;
-import java.util.Map;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -19,6 +16,7 @@ import javax.swing.table.TableColumn;
 
 public class View {
 
+	@SuppressWarnings("unused")
 	private Controller c;
 	private JFrame frame;
 	

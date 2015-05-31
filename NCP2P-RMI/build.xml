@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="NCP2P-RMI">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../../../../Program Files/eclipse/"/>
+    <property name="workspace_loc" value="D:\Nilesh\Projects\Java"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="NCP2P-RMI.classpath">
+        <pathelement location="bin"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.ucls"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="Addition">
+        <java classname="peer.Addition" failonerror="true" fork="yes">
+            <jvmarg line="-Djava.security.policy=file:${workspace_loc}/NCP2P-RMI/security.policy -Djava.rmi.server.codebase=file:${workspace_loc}/NCP2P-RMI/bin/"/>
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="ComputeEngine">
+        <java classname="engine.ComputeEngine" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="Controller (1)">
+        <java classname="peer.Controller" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="PeerConsoleUI">
+        <java classname="peer.PeerConsoleUI" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="PeerCWUI">
+        <java classname="peer.PeerCWUI" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="RMIClient">
+        <java classname="peer.RMIClient" failonerror="true" fork="yes">
+            <arg line="localhost"/>
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="SuperPeerImpl">
+        <java classname="speer.SuperPeerImpl" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="Upload">
+        <java classname="peer.Upload" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+    <target name="View">
+        <java classname="peer.View" failonerror="true" fork="yes">
+            <classpath refid="NCP2P-RMI.classpath"/>
+        </java>
+    </target>
+</project>

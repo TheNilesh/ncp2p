@@ -22,7 +22,7 @@ import java.util.Map;
 import com.FileInfo;
 
 /**
- * Example to watch a directory (or tree) for changes to files.
+ * Watch a directory (or tree) for changes to files.
  */
 
 public class WatchDir implements Runnable{
@@ -125,7 +125,8 @@ public class WatchDir implements Runnable{
             }
 
             for (WatchEvent<?> event: key.pollEvents()) {
-                WatchEvent.Kind kind = event.kind();
+                @SuppressWarnings("rawtypes")
+				WatchEvent.Kind kind = event.kind();
 
                 // TBD - provide example of how OVERFLOW event is handled
                 if (kind == OVERFLOW) {

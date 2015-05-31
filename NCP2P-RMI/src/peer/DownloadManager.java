@@ -41,7 +41,7 @@ public class DownloadManager implements Runnable {
 				
 				//Get Address
 				if(myaddress==null){
-					loadMyAddress("127.0.0.1",5478); //contact STUN server
+					loadMyAddress("49.248.108.146",4690); //contact STUN server
 				}
 				
 				//start listening
