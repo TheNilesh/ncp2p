@@ -33,7 +33,7 @@ public class PeerImpl implements Peer {
 	
 	public PeerImpl(View v){
 		
-		this.view=v;
+		this.view=v;	
 		files=new TwoWayHashMap<String,File>();
 		ignored=new Vector<File>();
 		
