@@ -3,12 +3,12 @@ package peer;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Vector;
 
+import com.Configuration;
 import com.DigestCalc;
 import com.FileInfo;
 import com.Peer;
@@ -17,6 +17,7 @@ import com.TwoWayHashMap;
 
 public class PeerImpl implements Peer {
 
+	private Configuration conf;
 	public String nick;
 	public View view;
 	
@@ -30,18 +31,24 @@ public class PeerImpl implements Peer {
 	
 	private TwoWayHashMap<String,File> files; //mapping from filename to md5 and vice versa
 	private Vector<File> ignored;
+
 	
-	public PeerImpl(View v){
+	public PeerImpl(View v, String confFile){
 		
-		this.view=v;	
+		this.view=v;
+		this.conf=Configuration.getConf(confFile); //load Configuration
+		
 		files=new TwoWayHashMap<String,File>();
 		ignored=new Vector<File>();
 		
-		nick="Peer" + new Random().nextInt(10);
-		sp=new SuperPeerStub(this,"49.248.108.146",4689);
+		nick=conf.getNick();
+		//nick="Peer" + new Random().nextInt(10);
+		
+		sp=new SuperPeerStub(this,conf.getSuperpeers());
 		
 		spThrd=new Thread((Runnable) sp); //? Runnable
 		spThrd.start();
+		
 		while(!sp.register(this, true)){ //registration failed, then go inside loop, to change nickname
 			nick="Peer" + new Random().nextInt(20);
 		};
@@ -49,7 +56,7 @@ public class PeerImpl implements Peer {
 		view.setInfo("PNAME",nick);
 		
 		try{
-			shareDir=new File("E:\\TEST1");
+			shareDir=new File(conf.getSharedDir());
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
 			watcherThread.start();
@@ -58,13 +65,9 @@ public class PeerImpl implements Peer {
 			System.out.println("Unable to start directory watch Service");
 		}
 		
-		int udpport=5012;
-		while(true){
-			try {
-				dm=new DownloadManager(this,udpport);
-				break;							 //no exception
-			} catch (SocketException e) {udpport++;}
-		}//while loop
+
+		dm=new DownloadManager(this,conf.getStuns());
+		
 	}
 	
 	void fileChanged(File f,int stat){

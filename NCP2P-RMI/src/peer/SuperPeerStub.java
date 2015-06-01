@@ -8,22 +8,27 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.SynchronousQueue;
 
 import com.FileInfo;
+import com.Host;
 import com.Peer;
 import com.SuperPeer;
 
 public class SuperPeerStub implements SuperPeer,Runnable{
 /* Peer Side Representative of SuperPeer
  * Job of this class is to Pack Parameters and send to server, unpack returned result and give back*/
+	
+	/*TODO: respBuf() waits indefinitely.
+	 * 
+	 */
 	public static final long TIMEOUT=4500;
 	Random r;
 	
 	Socket s;
-	String site;
-	int port;
+	LinkedList<Host> superPeers;
 	enum State{CONNECTED,DISCONNECTED,FAILED,IDLE};
 	State state;
 	
@@ -35,6 +40,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	
 	SynchronousQueue<Object> respBuf;
 
+	/*
 	public SuperPeerStub(PeerImpl p, String site,int port){
 		this.site=site;
 		this.port=port;
@@ -42,21 +48,41 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		respBuf=new SynchronousQueue<Object>();
 		r=new Random();
 		state=State.IDLE;
-	}
+	}*/
 	
+	public SuperPeerStub(PeerImpl p, LinkedList<Host> superpeers) {
+		this.p=p;
+		respBuf=new SynchronousQueue<Object>();
+		r=new Random();
+		this.superPeers=superpeers;
+		state=State.IDLE;
+	}
+
 	private void initConnection(){
 		connFlag=false;
-		try {
-			s=new Socket(site,port);
-			obos=new ObjectOutputStream(s.getOutputStream());
-			obis=new ObjectInputStream(s.getInputStream());
-			connFlag=true;
-		}catch(ConnectException e){
-			state=State.IDLE;
-			System.out.println("Failed to connect Superpeer.:Unreachable ");
-		} catch (IOException e) {
-			e.printStackTrace();
-			//execute alternate SuperPeer connection
+		int i=0;
+		int maxAttempt=5;
+		Host a;
+		while(i<maxAttempt){
+			a=superPeers.getFirst();
+			System.out.println("Contacting SuperPeer :"  + a);
+			try {
+				s=new Socket(a.getIp(),a.getPort());
+				obos=new ObjectOutputStream(s.getOutputStream());
+				obis=new ObjectInputStream(s.getInputStream());
+				connFlag=true;
+				return;
+			}catch(ConnectException e){
+				state=State.IDLE;
+				System.out.println("Failed to connect " + a );
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.out.println("Failed to due to Exception " + a );
+			}
+			
+			a=superPeers.removeFirst();
+			superPeers.addLast(a);
+			i++;
 		}
 	}
 	
@@ -162,9 +188,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	@Override
 	public void run() {
 		/* This thread continously listen to Server through PeerStub*/
-		System.out.println("Connecting to SuperPeer:" + site + ":" + port);
+		System.out.println("Connecting to SuperPeer");
 		initConnection();
-		System.out.println("Connected to SuperPeer");
+		//System.out.println("Connected to SuperPeer");
 		
 		try{	
 			while(connFlag){
@@ -206,12 +232,12 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		}catch (SocketException e) {
 			// Connection lost
 			System.out.println("Disconnected from superpeer");
-			//execute connection to next Super peer
-			//e.printStackTrace();
 			connFlag=false;
 		}catch(IOException e){
 			System.out.println("Listening stopped due to IOException");
 		}
+		System.out.println("Reconnecting...");
+		initConnection(); //Reconnect
 	}//run()
 
 }

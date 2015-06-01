@@ -69,7 +69,7 @@ public class Controller extends MouseAdapter implements ActionListener {
 	public static void main(String args[]){
 		Controller c=new Controller();
 		View v=new View();
-		PeerImpl p=new PeerImpl(v);
+		PeerImpl p=new PeerImpl(v,"C:\\conf.xml");
 		c.setView(v);
 		c.setModel(p);
 		v.setController(c);

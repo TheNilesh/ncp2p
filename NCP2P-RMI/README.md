@@ -19,7 +19,6 @@ http://ieeexplore.ieee.org/xpl/login.jsp?tp=&arnumber=6497042&url=http%3A%2F%2Fi
 
 TODO
 ---------
-0. Save and Load configuration from XML file
 0. Logging - to terminal, file, and GUI
 0. Icons, ProgressBar in JTable
 0. XOR-ing blocks (Network Coding), File subscribe function
