@@ -8,6 +8,8 @@ import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import javax.swing.JTable;
 
+import com.Configuration;
+
 public class Controller extends MouseAdapter implements ActionListener {
 
 	PeerImpl model;
@@ -43,8 +45,13 @@ public class Controller extends MouseAdapter implements ActionListener {
 			}else{
 				view.showMessage("No Files matching search pattern.");
 			}
+		}else if(btn.equals(view.btnSave)){
+			Configuration cf= model.getConf();
+			cf.setPeerName(view.txtPeerName.getText());
+			cf.setShareDir(view.txtShare.getText());
+			cf.saveConf();
+			view.showMessage("Settings saved in " + cf.getSource());
 		}
-		
 		
 		btn.setEnabled(true);
 	  }
@@ -69,7 +76,7 @@ public class Controller extends MouseAdapter implements ActionListener {
 	public static void main(String args[]){
 		Controller c=new Controller();
 		View v=new View();
-		PeerImpl p=new PeerImpl(v,"C:\\conf.xml");
+		PeerImpl p=new PeerImpl(v,args[0]);
 		c.setView(v);
 		c.setModel(p);
 		v.setController(c);

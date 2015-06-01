@@ -22,4 +22,8 @@ public class Host{
 	public int getPort(){
 		return port;
 	}
+	
+	@Override public String toString(){
+		return ip + ":" + port;
+	}
 }

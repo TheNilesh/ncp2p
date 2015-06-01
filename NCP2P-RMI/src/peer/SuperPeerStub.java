@@ -25,13 +25,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	 * 
 	 */
 	public static final long TIMEOUT=4500;
-	Random r;
-	
+	Random r;	
 	Socket s;
 	LinkedList<Host> superPeers;
-	enum State{CONNECTED,DISCONNECTED,FAILED,IDLE};
-	State state;
-	
 	PeerImpl p;
 	
 	ObjectOutputStream obos;
@@ -40,28 +36,18 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	
 	SynchronousQueue<Object> respBuf;
 
-	/*
-	public SuperPeerStub(PeerImpl p, String site,int port){
-		this.site=site;
-		this.port=port;
-		this.p=p;
-		respBuf=new SynchronousQueue<Object>();
-		r=new Random();
-		state=State.IDLE;
-	}*/
-	
 	public SuperPeerStub(PeerImpl p, LinkedList<Host> superpeers) {
 		this.p=p;
 		respBuf=new SynchronousQueue<Object>();
 		r=new Random();
 		this.superPeers=superpeers;
-		state=State.IDLE;
+		connFlag=false;
 	}
 
 	private void initConnection(){
 		connFlag=false;
 		int i=0;
-		int maxAttempt=5;
+		int maxAttempt=superPeers.size();
 		Host a;
 		while(i<maxAttempt){
 			a=superPeers.getFirst();
@@ -71,9 +57,10 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 				obos=new ObjectOutputStream(s.getOutputStream());
 				obis=new ObjectInputStream(s.getInputStream());
 				connFlag=true;
+				p.view.setInfo("STAT", "Online");
+				p.view.setInfo("SP", a.toString());
 				return;
 			}catch(ConnectException e){
-				state=State.IDLE;
 				System.out.println("Failed to connect " + a );
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -84,6 +71,8 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			superPeers.addLast(a);
 			i++;
 		}
+		
+		p.view.setInfo("STAT", "Failed to Connect");
 	}
 	
 	@Override
@@ -129,7 +118,7 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	}
 
 	@Override
-	public boolean downloadFile(InetSocketAddress sa, String checksum,int sessionID) {
+	public synchronized boolean downloadFile(InetSocketAddress sa, String checksum,int sessionID) {
 		boolean response=false;
 		while(!connFlag); //wait for connect
 		try {
@@ -235,7 +224,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 			connFlag=false;
 		}catch(IOException e){
 			System.out.println("Listening stopped due to IOException");
+			connFlag=false;
 		}
+		p.view.setInfo("STAT", "Offline");
 		System.out.println("Reconnecting...");
 		initConnection(); //Reconnect
 	}//run()

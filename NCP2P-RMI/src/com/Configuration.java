@@ -14,6 +14,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Configuration {
 
+	String xmlFile;
+	
 	@XmlElement(name="Nick-Name")
 	String nick;
 	@XmlElement(name="Shared-Sirectory")
@@ -43,13 +45,13 @@ public class Configuration {
 
 	public static Configuration getConf(String xmlFile){
 		 try {
-			 
 				File file = new File(xmlFile);
 				JAXBContext jaxbContext = JAXBContext.newInstance(Configuration.class);
 		 
 				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 				Configuration conf = (Configuration) jaxbUnmarshaller.unmarshal(file);
-				System.out.println(conf);
+				conf.setSource(xmlFile);
+				
 				return conf;
 			  } catch (JAXBException e) {
 				e.printStackTrace();
@@ -57,7 +59,11 @@ public class Configuration {
 		 return null;
 	}
 	
-	public void setConf(String xmlFile){
+	private void setSource(String xmlFile2) {
+		xmlFile=xmlFile2;
+	}
+
+	public void saveConf(){
 		  try {
 
 		        File file = new File(xmlFile);
@@ -65,12 +71,9 @@ public class Configuration {
 		        JAXBContext jaxbContext = JAXBContext.newInstance(Configuration.class);
 		        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
-		        // output pretty printed
 		        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
 		        jaxbMarshaller.marshal(this, file);
-		        
-		        jaxbMarshaller.marshal(this, System.out);
+		     //   jaxbMarshaller.marshal(this, System.out);
 
 		        } catch (JAXBException e) {
 		        	 e.printStackTrace();
@@ -78,8 +81,9 @@ public class Configuration {
 	}
 	
 	public static void main(String args[]){
-		Configuration conf=new Configuration();
-		conf.setConf("C:\\a.xml");
+		Configuration conf=new Configuration(); //create
+		conf.setSource("E:\\abc.xml");
+		conf.saveConf();	//save
 	}//main
 
 	public LinkedList<Host> getSuperpeers() {
@@ -96,6 +100,18 @@ public class Configuration {
 	
 	public String getSharedDir(){
 		return sharedDirectory;
+	}
+
+	public void setPeerName(String text) {
+		nick=text;
+	}
+
+	public void setShareDir(String text) {
+		sharedDirectory=text;
+	}
+
+	public String getSource() {
+		return xmlFile;
 	}
 }
 

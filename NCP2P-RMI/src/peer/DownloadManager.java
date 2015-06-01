@@ -39,6 +39,7 @@ public class DownloadManager implements Runnable {
 		connFlag=false;
 		this.stunservers=stuns;
 		myaddress=null;
+		p.view.setInfo("DMSTAT","IDLE");
 	}
 	
 	Download addDownload(FileInfo fi,File localfile, int sessionID){
@@ -51,6 +52,7 @@ public class DownloadManager implements Runnable {
 				//start listening
 				if(connFlag==false){ //id dm is idle, because no active download
 					connFlag=true;
+					p.view.setInfo("DMSTAT","ACTIVE");
 					new Thread(this).start();	//start listening
 				}
 				
@@ -94,7 +96,7 @@ public class DownloadManager implements Runnable {
 
 		byte[] tmp=new byte[1024];
 		int i=0;
-		int maxAttempt=5;
+		int maxAttempt=stunservers.size();
 		DatagramPacket dp;
 		
 		try {
@@ -122,6 +124,8 @@ public class DownloadManager implements Runnable {
 					myaddress=new InetSocketAddress(ip,port);
 	
 					System.out.println("Got external address: " + ip + ":" + port);
+					p.view.setInfo("EXIP", ip + ":" + port);
+					
 					ds.setSoTimeout(0); //after this no need to timeout
 					return;
 			//	}catch(ArrayOutOfBoundException e){
@@ -134,12 +138,14 @@ public class DownloadManager implements Runnable {
 					System.out.println("STUN Server:" + h + " I/O connection error.");
 				}
 				
+				p.view.setInfo("EXIP", "Contacting STUN");
 				h=stunservers.removeFirst();
 				stunservers.addLast(h);
 				i++;
 			}
 		} catch (SocketException e) {
 			System.out.println("Failed creating Socket.");
+			p.view.setInfo("EXIP", "ERROR");
 			e.printStackTrace();
 		}
 	}

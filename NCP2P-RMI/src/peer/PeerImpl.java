@@ -36,7 +36,7 @@ public class PeerImpl implements Peer {
 	public PeerImpl(View v, String confFile){
 		
 		this.view=v;
-		this.conf=Configuration.getConf(confFile); //load Configuration
+		this.conf=Configuration.getConf(confFile); //load Configuration from xml file
 		
 		files=new TwoWayHashMap<String,File>();
 		ignored=new Vector<File>();
@@ -54,20 +54,21 @@ public class PeerImpl implements Peer {
 		};
 		
 		view.setInfo("PNAME",nick);
+		view.setInfo("STAT","Online"); 
 		
 		try{
 			shareDir=new File(conf.getSharedDir());
 			watcher=new WatchDir(shareDir.toPath(),false,this);
 			Thread watcherThread=new Thread(watcher);
 			watcherThread.start();
+			view.setInfo("SHARE", conf.getSharedDir());
 			
 		}catch(IOException ex){
 			System.out.println("Unable to start directory watch Service");
 		}
 		
-
 		dm=new DownloadManager(this,conf.getStuns());
-		
+
 	}
 	
 	void fileChanged(File f,int stat){
@@ -142,7 +143,7 @@ public class PeerImpl implements Peer {
 			 	//name tags checksum length, seeders
 				System.out.format("%25s\t%10dKB\t%16s\t",fi.toString(), fi.getLen(), fi.getChecksum());
 				strRes[i][0]=fi.toString();
-				strRes[i][2]="" + fi.getLen();
+				strRes[i][2]="" + fi.getLen()/1024;
 				strRes[i][4]=fi.getChecksum();
 				
 				
@@ -181,7 +182,7 @@ public class PeerImpl implements Peer {
 		}
 		
 		dm.startUpload(sessionID);							//This should be point of fork, so that immediate response can be returned to server
-		System.out.println("UPLOADing:" + strfi + " : " + blkfrm + "-->"+ blkto + " to " + dest);
+		System.out.println("UPLOAD:" + strfi + " : " + blkfrm + "-->"+ blkto + " to " + dest);
 		
 		return true;
 	}
@@ -196,5 +197,9 @@ public class PeerImpl implements Peer {
 		System.out.println("UNIGNORE:" + b + " Download Complete " + f.getName());
 		view.showMessage("Download complete :" + f.getName());
 		fileChanged(f,FileInfo.CREATE);
+	}
+	
+	public Configuration getConf(){
+		return conf;
 	}
 }
