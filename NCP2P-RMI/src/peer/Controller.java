@@ -76,10 +76,14 @@ public class Controller extends MouseAdapter implements ActionListener {
 	public static void main(String args[]){
 		Controller c=new Controller();
 		View v=new View();
-		PeerImpl p=new PeerImpl(v,args[0]);
+		try{
+			PeerImpl p=new PeerImpl(v,args[0]);
 		c.setView(v);
 		c.setModel(p);
 		v.setController(c);
+		}catch(ArrayIndexOutOfBoundsException e){
+			v.showMessage("Create setting.xml.");
+		}
 	}
 	
 }
