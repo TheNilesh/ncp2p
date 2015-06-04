@@ -2,6 +2,7 @@ package peer;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 import com.Constants;
+import com.DigestCalc;
 import com.FileInfo;
 import com.Host;
 
@@ -82,10 +84,16 @@ public class DownloadManager implements Runnable {
 	}
 	
 	void taskComplete(int sessionID){
-		
+		DigestCalc dc=new DigestCalc();
 		Download d=downloads.get(sessionID);
 		if(d!=null){
-			p.downloadComplete(d.localfile);
+			String checksum=dc.calculateMD5(d.localfile);
+			if(d.fi.getChecksum().equals(checksum)){
+				p.downloadComplete(d.localfile);
+			}else{
+				p.view.showMessage("Download Error, Checksum verification failed");
+			}
+			
 		}
 		
 	}
@@ -190,20 +198,32 @@ public class DownloadManager implements Runnable {
 	private boolean processPacket(byte[] packet){
 		
 		ByteArrayInputStream bais=new ByteArrayInputStream(packet);
-		int sessionID=bais.read();
-		System.out.println("Packet SessionID:" + sessionID);
-		Download d=downloads.get(new Integer(sessionID));
-		if(d==null){ 			//No sessionID available
+		DataInputStream dis=new DataInputStream(bais);
+		//int sessionID=bais.read();
+		int sessionID;
+		try {
+			sessionID = dis.readInt();
+			
+			System.out.println("Packet SessionID:" + sessionID);
+			Download d=downloads.get(new Integer(sessionID));
+			if(d==null){ 			//No sessionID available
+				return false;
+			}
+			
+			//not good practice
+			(new Thread(){
+				@Override
+					public void run(){
+						d.unmarshal(packet);
+					}
+			}).start();
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
 			return false;
 		}
-		
-		(new Thread(){
-				public void run(){
-					d.unmarshal(packet);
-				}
-		}).start();
-		
-		return true;
 	}
 
 	public void startUpload(int sessionID) {

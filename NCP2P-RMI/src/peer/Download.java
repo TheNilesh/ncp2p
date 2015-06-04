@@ -1,6 +1,7 @@
 package peer;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -45,9 +46,20 @@ public class Download{
 			byte[]payload = null;
 			int blockNumber;
 			ByteArrayInputStream bis=new ByteArrayInputStream(packet);
-			bis.read(); //sessionID
+			DataInputStream dis=new DataInputStream(bis);
+			
+			//bis.read(); //sessionID
 			try {
-				blockNumber=bis.read();	//Which location
+				dis.readInt();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+			
+			try {
+				//blockNumber=bis.read();	//Which location
+				blockNumber=dis.read();	//Which location
+				
 				payload=new byte[bis.available()];
 				bis.read(payload); //read data
 				//type of packet is data_block

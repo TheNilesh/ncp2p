@@ -1,6 +1,7 @@
 package peer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,9 +40,9 @@ public class Upload implements Runnable{
 		try{
 			if(!on){
 				ds=new DatagramSocket();
-				String ip=ia.getHostString();
-				int port=ia.getPort();
-				System.out.println("xxxxx"  + ip + ":" + port);
+				//String ip=ia.getHostString();
+				//int port=ia.getPort();
+				//System.out.println("to"  + ip + ":" + port);
 				//ds.connect(ia);
 				ds.setSoTimeout(TIMEOUT);
 				new Thread(this).start();
@@ -98,8 +99,11 @@ public class Upload implements Runnable{
 	boolean send(int blknum, byte[]payload){
 		ByteArrayOutputStream baos=new ByteArrayOutputStream();
 		try{
-			baos.write(sessionID); //session identifying 
-			baos.write(blknum);		//index of block
+			DataOutputStream dos=new DataOutputStream(baos);
+			//baos.write(sessionID); //session identifying
+			dos.writeInt(sessionID);
+			dos.writeInt(blknum);
+			//baos.write(blknum);		//index of block
 			baos.write(payload);	//actual data
 			
 			byte[] packet=baos.toByteArray();
