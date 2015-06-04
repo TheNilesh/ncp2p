@@ -45,9 +45,11 @@ public class Configuration {
 	public static Configuration getConf(String xmlFile){
 		 try {
 				File file = new File(xmlFile);
+				System.out.println("Retrieving:" + file.getAbsolutePath());
 				if(!file.exists()){
 					Configuration conf=new Configuration();
 					conf.setSource(file.getAbsolutePath());
+					System.out.println("Stored:" + file.getAbsolutePath());
 					conf.saveConf();
 					return conf;
 				}

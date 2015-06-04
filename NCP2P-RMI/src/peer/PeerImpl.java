@@ -48,11 +48,8 @@ public class PeerImpl implements Peer {
 		
 		shareDir=new File(conf.getSharedDir());
 		sp=new SuperPeerStub(this,conf.getSuperpeers()); //establishes connection and register nickname
-		
+		sp.initConnection();
 		System.out.println("sp created");
-		if(sp.connected){
-			sendAllFilesInfo();
-		}
 		
 		view.setInfo("SHARE", conf.getSharedDir());
 		dm=new DownloadManager(this,conf.getStuns());
@@ -209,10 +206,9 @@ public class PeerImpl implements Peer {
 				Thread watcherThread=new Thread(watcher);
 				watcherThread.start();
 				System.out.println("Started watch Service");
-				//System.out.println("Reading current files");
-				//watcher.readCurrentFiles(shareDir);
 			}
-
+			System.out.println("Reading current files");
+			watcher.readCurrentFiles(shareDir);
 			
 			
 		}catch(IOException ex){

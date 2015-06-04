@@ -41,10 +41,10 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		//r=new Random();
 		this.superPeers=superpeers;
 		connected=false;
-		initConnection();
+		//initConnection();
 	}
 
-	private void initConnection(){
+	void initConnection(){
 		connected=false;
 		int i=0;
 		int maxAttempt=superPeers.size();
