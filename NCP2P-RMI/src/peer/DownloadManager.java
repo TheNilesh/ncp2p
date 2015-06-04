@@ -22,11 +22,11 @@ import com.Host;
 public class DownloadManager implements Runnable {
 	
 	final int TIMEOUT=5000;
-	Hashtable<Integer,Download> downloads;
-	Hashtable<Integer,Upload> uploads;
+	private Hashtable<Integer,Download> downloads;
+	private Hashtable<Integer,Upload> uploads;
 	PeerImpl p;
-	DatagramSocket ds;
-	Thread downThrd;
+	private DatagramSocket ds;
+	private Thread downThrd;
 	
 	LinkedList<Host> stunservers;
 	
@@ -171,6 +171,7 @@ public class DownloadManager implements Runnable {
 			{
 				System.out.println("Listening");
 				ds.receive(p);
+				System.out.println("Datagram Recvd.");
 				byte[] temp=p.getData();	//array length is = buf.length, so we need another smaller array exactly = size of data
 				
 				byte[] packet= new byte[p.getLength()];		//sessionID removed

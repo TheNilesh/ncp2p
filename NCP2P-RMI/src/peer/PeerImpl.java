@@ -28,7 +28,7 @@ public class PeerImpl implements Peer {
 	
 	private DownloadManager dm;
 	
-	private TwoWayHashMap<String,File> files; //mapping from filename to md5 and vice versa
+	private TwoWayHashMap<String,String> files; //mapping from filename to md5 and vice versa
 	private Vector<File> ignored;
 
 	
@@ -37,13 +37,10 @@ public class PeerImpl implements Peer {
 		this.view=v;
 		this.conf=Configuration.getConf(confFile); //load Configuration from xml file
 		
-		files=new TwoWayHashMap<String,File>();
+		files=new TwoWayHashMap<String,String>();
 		ignored=new Vector<File>();
 		
 		nick=conf.getNick();
-		if(nick.trim().equalsIgnoreCase("")){
-			nick="Peer" + new Random().nextInt(10);
-		}
 		
 		shareDir=new File(conf.getSharedDir());
 		sp=new SuperPeerStub(this,conf.getSuperpeers()); //establishes connection and register nickname
@@ -63,18 +60,20 @@ public class PeerImpl implements Peer {
 			return;
 		}
 		if(stat==FileInfo.DELETE){
-			strfi = files.getBackward((File)f);
+			strfi = files.getBackward(f.getName());
 			files.remove(strfi);
 			System.out.println("DELETED:" + f.getName());
 		}else if(stat==FileInfo.CREATE){
 			strfi=d.calculateMD5(f);
-			files.put(strfi,(File)f);
+			files.put(strfi,f.getName());
 			System.out.println("CREATED:" + f.getName());
 		}else if(stat==FileInfo.MODIFY){
-			strfi=files.getBackward((File)f); //old mapping
-			files.remove(strfi);			//remove old mapping
+			strfi=files.getBackward(f.getName()); //old mapping
+			if(strfi!=null){
+				files.remove(strfi);			//remove old mapping
+			}
 			strfi=d.calculateMD5(f);
-			files.put(strfi,(File)f);	//add new mapping
+			files.put(strfi,f.getName());	//add new mapping
 			System.out.println("MODIFIED:" + f.getName());
 		}
 
@@ -88,8 +87,8 @@ public class PeerImpl implements Peer {
 	
 	void downloadFile(String checksum,String localName){
 		
-		File f=files.getForward(checksum);
-		if(f!=null){
+		File f=new File(shareDir + "\\" + files.getForward(checksum));
+		if(f.exists()){
 			view.showMessage("You already have this file saved as "+ f.getName());
 			System.out.println("You already have this file saved as "+ f.getName());
 			return;
@@ -138,21 +137,31 @@ public class PeerImpl implements Peer {
 					strRes[i][2]="" + fi.getLen()/1024;
 					strRes[i][4]=fi.getChecksum();
 					
+					String tmp=new String();
 					
 					Iterator<String> tit=fi.getTags().iterator();
 					while(tit.hasNext()){
 						String s=tit.next();
-						System.out.format("%s,",s);
-						strRes[i][1]=s + ", ";
+						//System.out.format("%s,",s);
+						
+						if(!strRes[i][0].equalsIgnoreCase(s)){
+							tmp=tmp.concat(s);
+							tmp=tmp.concat(",");
+						}
 					}
+					strRes[i][1]=tmp;
 					
+					tmp="";
 					System.out.format("\t");
 					Iterator<String> pit=fi.getSeeders().iterator();
 					while(pit.hasNext()){
 						String p=pit.next();
-						System.out.format("%s,",p);
-						strRes[i][3]=p + ", ";
+						//System.out.format("%s,",p);
+						tmp=tmp.concat(p);
+						tmp=tmp.concat(",");
 					}
+					strRes[i][3]=tmp;
+					
 					i++;
 					System.out.println();
 			}
@@ -166,8 +175,8 @@ public class PeerImpl implements Peer {
 	//****************TO BE CALLED by SERVER **************
 	@Override
 	public boolean uploadBlock(String strfi,int blkfrm,int blkto,InetSocketAddress dest,int sessionID) {
-		File f=files.getForward(strfi);
-		if(f==null){
+		File f=new File(shareDir + "\\" + files.getForward(strfi));
+		if(!f.exists()){
 			return false;
 		}
 		

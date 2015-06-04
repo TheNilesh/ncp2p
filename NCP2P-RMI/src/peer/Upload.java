@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -13,6 +14,7 @@ import java.net.SocketTimeoutException;
 import com.Constants;
 
 public class Upload implements Runnable{
+	public static final int TIMEOUT=5000;
 	private DownloadManager dm;
 	private File file;
 	private int sessionID;
@@ -37,8 +39,11 @@ public class Upload implements Runnable{
 		try{
 			if(!on){
 				ds=new DatagramSocket();
-				ds.connect(ia);
-				ds.setSoTimeout(3000);
+				String ip=ia.getHostString();
+				int port=ia.getPort();
+				System.out.println("xxxxx"  + ip + ":" + port);
+				//ds.connect(ia);
+				ds.setSoTimeout(TIMEOUT);
 				new Thread(this).start();
 			}
 		}catch(SocketException se){
@@ -99,6 +104,15 @@ public class Upload implements Runnable{
 			
 			byte[] packet=baos.toByteArray();
 			DatagramPacket dp=new DatagramPacket(packet,packet.length);
+				
+				dp.setSocketAddress(ia);
+				String ip=ia.getAddress().getHostAddress();
+				int port=ia.getPort();
+				dp.setAddress(InetAddress.getByName(ip));
+				dp.setPort(port);
+				
+				System.out.println("Sending to :" + ip + ":"+ port);
+				
 				ds.send(dp);
 				ds.receive(dp);		//wait for max 3 seconds
 				//ACK recvd

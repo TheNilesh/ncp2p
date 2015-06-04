@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <configuration>
-    <Nick-Name>Aditya</Nick-Name>
-    <Shared-Directory>E:\TEST2</Shared-Directory>
+    <Nick-Name>NileshHome3</Nick-Name>
+    <Shared-Directory>E:\TEST3</Shared-Directory>
     <superpeerlist>
         <SuperPeer>
-            <ip>49.248.108.146</ip>
+            <ip>192.168.137.1</ip>
             <port>4689</port>
         </SuperPeer>
     </superpeerlist>
     <stunserverlist>
         <STUNServer>
-            <ip>49.248.108.146</ip>
+            <ip>192.168.137.1</ip>
             <port>4690</port>
         </STUNServer>
     </stunserverlist>

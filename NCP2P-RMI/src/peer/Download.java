@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.DatagramSocket;
 import java.net.SocketException;
 
 import com.Constants;
@@ -58,9 +57,9 @@ public class Download{
 					dm.p.view.updateProgress(sessionID,blkgot);
 				}
 				if(blkgot==blkcnt){
+					out.close();
 					System.out.println("File received");
 					dm.taskComplete(sessionID);
-					out.close();
 				}
 				
 			} catch (IOException e) {

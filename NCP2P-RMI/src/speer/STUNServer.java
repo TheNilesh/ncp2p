@@ -26,12 +26,10 @@ public class STUNServer implements Runnable{
 				
 				InetAddress ia=dp.getAddress();
 				int port=dp.getPort();
-				
-				String site=ia.getHostAddress() + ":"+ port;
-				
-				//System.out.println("Req from:" + site);
+				String site=ia.getHostAddress() + ":"+ port ;
 				
 				dp=new DatagramPacket(site.getBytes(),site.length(),ia,port);
+
 				ds.send(dp);
 			} catch (IOException e) {
 				e.printStackTrace();

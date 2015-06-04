@@ -35,7 +35,7 @@ public class View {
 	
 	
 	JButton btnSearch;
-	private JTextField txtSearch;
+	JTextField txtSearch;
 	private DefaultTableModel dftSearch;
 	private JTable tblSearch;
 	private DefaultTableModel dftTasks;
@@ -59,6 +59,7 @@ public class View {
 		tblSearch.addMouseListener(c);
 		//tblTasks.addMouseListener(c);
 		btnSave.addActionListener(c);
+		txtSearch.addActionListener(c);
 	}
 
 	/**
@@ -122,7 +123,7 @@ public class View {
 		dftSearch.addColumn("File Name");
 		dftSearch.addColumn("Tags");
 		dftSearch.addColumn("Size(KB)");
-		dftSearch.addColumn("Seeders");
+		dftSearch.addColumn("Sources");
 		dftSearch.addColumn("MD5");
        
 		tblSearch = new JTable(dftSearch);
@@ -314,7 +315,7 @@ public class View {
 	public void updateProgress(int sessionID, int progress) {
 		int i = getRow(sessionID);
 		if(i!=-1){
-			dftTasks.setValueAt(new Integer(progress), i, 3); //3 column=Progress
+			dftTasks.setValueAt(new Integer(progress), i, 2); //2 column=Progress
 		}
 	}
 	

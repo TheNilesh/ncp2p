@@ -27,33 +27,37 @@ public class Controller extends MouseAdapter implements ActionListener {
 	@Override
 	 public void actionPerformed(ActionEvent arg0) {
 	  
-		System.out.println("Action Performed" + arg0.getID());
+		//System.out.println("Action Performed" + arg0.getID());
 		
 		if(view==null){
 			return;
 		}
-	   //retrieve the input from View
 
 		Object obj=arg0.getSource();
-		JButton btn=(JButton)obj;
 		
-		btn.setEnabled(false);
-		if(btn.equals(view.btnSearch)){
-			String[][] tmp1= model.searchFile(view.getSearchText());
-			if(tmp1.length!=0){
-				view.setSearchResult(tmp1);
-			}else{
-				view.showMessage("No Files matching search pattern.");
-			}
-		}else if(btn.equals(view.btnSave)){
-			Configuration cf= model.getConf();
-			cf.setPeerName(view.txtPeerName.getText());
-			cf.setShareDir(view.txtShare.getText());
-			cf.saveConf();
-			view.showMessage("Settings saved in " + cf.getSource());
+		if(obj.equals(view.txtSearch)){
+			obj=view.btnSearch;	//this is search operation
 		}
 		
-		btn.setEnabled(true);
+		if(obj instanceof JButton){			
+			JButton btn=(JButton)obj;
+			btn.setEnabled(false);
+			if(btn.equals(view.btnSearch)){
+				String[][] tmp1= model.searchFile(view.getSearchText());
+				if(tmp1.length!=0){
+					view.setSearchResult(tmp1);
+				}else{
+					view.showMessage("No Files matching search pattern.");
+				}
+			}else if(btn.equals(view.btnSave)){
+				Configuration cf= model.getConf();
+				cf.setPeerName(view.txtPeerName.getText());
+				cf.setShareDir(view.txtShare.getText());
+				cf.saveConf();
+				view.showMessage("Settings saved in " + cf.getSource());
+			}	
+			btn.setEnabled(true);
+		}
 	  }
 	
 	//For jTable

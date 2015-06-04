@@ -19,23 +19,23 @@ public class SuperPeerImpl implements SuperPeer {
 	@SuppressWarnings("unused") //Creates thread, so no meaning unused
 	private SPServer server;
 	@SuppressWarnings("unused")	//Creates thread, so no meaning unused
-	private STUNServer stun;
 	
 	public static void main(String args[]){
 		try{
-			new SuperPeerImpl();
+			new SuperPeerImpl(4689);
+			STUNServer stun=new STUNServer(4690);
 		}catch(IOException e){
 			e.printStackTrace();
 		}
 	}
 	
-	public SuperPeerImpl() throws IOException{
+	public SuperPeerImpl(int port) throws IOException{
 		
 		peers=new Hashtable<String,Peer>();
 		files=new ConcurrentHashMap<String,FileInfo>();
-		server=new SPServer(this,4689);
-		System.out.println("4689");
-		stun=new STUNServer(4690);
+		server=new SPServer(this,port);
+		System.out.println("SuperPeer started on port:" + port);
+		
 	}
 	
 	@Override

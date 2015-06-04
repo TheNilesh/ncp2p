@@ -10,6 +10,8 @@ import java.net.SocketException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.SynchronousQueue;
 
 import com.FileInfo;
@@ -86,8 +88,15 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		}
 		
 		p.view.setInfo("STAT", "Failed to Connect");
-		System.out.println("retrying after 10 seconds.");
+		System.out.println("retrying after 30 seconds.");
 		//create Timer ask call back
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+			  @Override
+			  public void run() {
+			   initConnection();
+			  }
+			}, 30*1000);
 	}
 	
 	@Override
