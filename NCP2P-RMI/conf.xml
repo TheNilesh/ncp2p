@@ -4,13 +4,13 @@
     <Shared-Directory>E:\TEST2</Shared-Directory>
     <superpeerlist>
         <SuperPeer>
-            <ip>192.168.1.253</ip>
+            <ip>49.248.108.146</ip>
             <port>4689</port>
         </SuperPeer>
     </superpeerlist>
     <stunserverlist>
         <STUNServer>
-            <ip>192.168.1.253</ip>
+            <ip>49.248.108.146</ip>
             <port>4690</port>
         </STUNServer>
     </stunserverlist>
