@@ -10,34 +10,34 @@ import java.util.concurrent.SynchronousQueue;
 
 import com.FileInfo;
 import com.Peer;
-import com.SuperPeer;
 
 public class PeerStub implements Peer,Runnable {
 /* Server side representative of Peer, creates as many instance as the number of peers*/
-	SuperPeer sp; //needed to give callback(local)
-	Socket s;
-	ObjectOutputStream obos;
-	ObjectInputStream obis;
-	boolean connFlag;
-	boolean registered;
-	SynchronousQueue<Object> respBuf;
+	private SuperPeerImpl sp; //needed to give callback(local)
+	private Socket s;
+	private ObjectOutputStream obos;
+	private ObjectInputStream obis;
+	private boolean connected;
+	private boolean registered;
+	private SynchronousQueue<Object> respBuf;
 	
 	String nick;
 	
-	public PeerStub(SuperPeer sp,Socket s2){
-		nick="NEW";
+	public PeerStub(SuperPeerImpl sp,Socket s2){
+		nick="NEW_PEER";
 		s=s2;
 		this.sp=sp;
 		registered=false;
-		connFlag=false;
+		connected=false;
 		respBuf=new SynchronousQueue<Object>();
+		initConnection();
 	}
 	
 	void initConnection(){
 		try {
 			obis=new ObjectInputStream(s.getInputStream());
 			obos=new ObjectOutputStream(s.getOutputStream());
-			connFlag=true;
+			connected=true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -49,10 +49,9 @@ public class PeerStub implements Peer,Runnable {
 		 */
 		boolean response;
 		String checksum=null;
-		initConnection(); //open streams for communication;
 		
-		try{		
-			while(connFlag){
+		try{
+			while(connected){
 				response=false;
 				try {
 					

@@ -26,6 +26,7 @@ public class DownloadManager implements Runnable {
 	Hashtable<Integer,Upload> uploads;
 	PeerImpl p;
 	DatagramSocket ds;
+	Thread downThrd;
 	
 	LinkedList<Host> stunservers;
 	
@@ -53,7 +54,8 @@ public class DownloadManager implements Runnable {
 				if(connFlag==false){ //id dm is idle, because no active download
 					connFlag=true;
 					p.view.setInfo("DMSTAT","ACTIVE");
-					new Thread(this).start();	//start listening
+					downThrd=new Thread(this);
+					downThrd.start();	//start listening
 				}
 				
 				Download d=new Download(this,fi,localfile,sessionID);
@@ -160,7 +162,7 @@ public class DownloadManager implements Runnable {
 		}
 	}
 	
-	void listen() throws IOException{
+	private void listen() throws IOException{
 		byte buf[]=new byte[Constants.BLOCK_SIZE + 20];	//18 bytes header
 		byte[] tmp1="ACK".getBytes();
 		DatagramPacket dpACK = new DatagramPacket(tmp1,tmp1.length);
@@ -184,7 +186,7 @@ public class DownloadManager implements Runnable {
 			 }//while
 	}//listen
 	
-	boolean processPacket(byte[] packet){
+	private boolean processPacket(byte[] packet){
 		
 		ByteArrayInputStream bais=new ByteArrayInputStream(packet);
 		int sessionID=bais.read();
@@ -203,12 +205,13 @@ public class DownloadManager implements Runnable {
 		return true;
 	}
 
-	public int getPort() {
-		return ds.getLocalPort();
-	}
-
 	public void startUpload(int sessionID) {
 		Upload u=uploads.get(new Integer(sessionID));
 		u.startUpload();
+	}
+
+	public void removeDownload(int sessionID) {
+		downloads.remove(new Integer(sessionID));
+		//p.view.addTaskStatus(sessionID,"Error");
 	}
 }

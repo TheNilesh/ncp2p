@@ -18,7 +18,7 @@ public class Configuration {
 	
 	@XmlElement(name="Nick-Name")
 	String nick;
-	@XmlElement(name="Shared-Sirectory")
+	@XmlElement(name="Shared-Directory")
 	String sharedDirectory;
 
 	@XmlElementWrapper(name = "superpeerlist")
@@ -33,21 +33,26 @@ public class Configuration {
 		superPeers=new LinkedList<Host>();
 		stunServers=new LinkedList<Host>();
 		
-		superPeers.add(new Host("192.168.2.125",1025));
-		superPeers.add(new Host("192.168.2.125",1025));
+		superPeers.add(new Host("127.0.0.1",1025));
+		superPeers.add(new Host("127.0.0.1",4689));
 		
-		stunServers.add(new Host("192.168.2.125",1025));
-		stunServers.add(new Host("192.168.2.125",1025));
+		stunServers.add(new Host("127.0.0.1",4690));
 
 		nick="Nilesh";
-		sharedDirectory="C:\\Users\\Public";
+		sharedDirectory="C:\\Users\\Public\\Pictures";
 	}
 
 	public static Configuration getConf(String xmlFile){
 		 try {
 				File file = new File(xmlFile);
+				if(!file.exists()){
+					Configuration conf=new Configuration();
+					conf.setSource(file.getAbsolutePath());
+					conf.saveConf();
+					return conf;
+				}
+				
 				JAXBContext jaxbContext = JAXBContext.newInstance(Configuration.class);
-		 
 				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 				Configuration conf = (Configuration) jaxbUnmarshaller.unmarshal(file);
 				conf.setSource(xmlFile);
@@ -79,12 +84,6 @@ public class Configuration {
 		        	 e.printStackTrace();
 		        }
 	}
-	
-	public static void main(String args[]){
-		Configuration conf=new Configuration(); //create
-		conf.setSource("E:\\abc.xml");
-		conf.saveConf();	//save
-	}//main
 
 	public LinkedList<Host> getSuperpeers() {
 		return superPeers;

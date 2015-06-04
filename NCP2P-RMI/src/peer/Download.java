@@ -17,7 +17,7 @@ import com.FileInfo;
  */
 
 public class Download{
-	DatagramSocket ds;
+	//DatagramSocket ds;
 	int sessionID;
 	int progress;
 	Thread thread;

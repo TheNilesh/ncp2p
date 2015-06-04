@@ -24,47 +24,60 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	/*TODO: respBuf() waits indefinitely.
 	 * 
 	 */
-	public static final long TIMEOUT=4500;
-	Random r;	
-	Socket s;
-	LinkedList<Host> superPeers;
-	PeerImpl p;
+	private Socket s;
+	public Thread recvThrd;
+	private LinkedList<Host> superPeers;
+	private PeerImpl p;
 	
-	ObjectOutputStream obos;
-	ObjectInputStream obis;
-	boolean connFlag;
+	private ObjectOutputStream obos;
+	private ObjectInputStream obis;
+	boolean connected;
 	
-	SynchronousQueue<Object> respBuf;
+	private SynchronousQueue<Object> respBuf;
 
 	public SuperPeerStub(PeerImpl p, LinkedList<Host> superpeers) {
 		this.p=p;
 		respBuf=new SynchronousQueue<Object>();
-		r=new Random();
+		//r=new Random();
 		this.superPeers=superpeers;
-		connFlag=false;
+		connected=false;
+		initConnection();
 	}
 
 	private void initConnection(){
-		connFlag=false;
+		connected=false;
 		int i=0;
 		int maxAttempt=superPeers.size();
 		Host a;
 		while(i<maxAttempt){
+			p.view.setInfo("STAT", "Offline");
 			a=superPeers.getFirst();
 			System.out.println("Contacting SuperPeer :"  + a);
 			try {
 				s=new Socket(a.getIp(),a.getPort());
 				obos=new ObjectOutputStream(s.getOutputStream());
 				obis=new ObjectInputStream(s.getInputStream());
-				connFlag=true;
-				p.view.setInfo("STAT", "Online");
+				connected=true;
+				recvThrd=new Thread(this); //Start receiving msgs
+				recvThrd.start();
+				p.view.setInfo("STAT", "Connected");
+				if(!register(p,true)){//if nickName already taken
+					p.nick = p.view.getInputString("Nickname not available. Choose another.");
+					if(p.nick==null){
+							p.nick="Peer" + new Random().nextInt(10);
+					}
+				}
+				
 				p.view.setInfo("SP", a.toString());
+				p.view.setInfo("PNAME", p.nick);
+				p.view.setInfo("STAT", "Online");
+				p.sendAllFilesInfo();	//ask p to update metadata to sp
 				return;
 			}catch(ConnectException e){
 				System.out.println("Failed to connect " + a );
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println("Failed to due to Exception " + a );
+				System.out.println("Failed to connect due to Exception " + a );
 			}
 			
 			a=superPeers.removeFirst();
@@ -73,12 +86,14 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		}
 		
 		p.view.setInfo("STAT", "Failed to Connect");
+		System.out.println("retrying after 10 seconds.");
+		//create Timer ask call back
 	}
 	
 	@Override
-	public synchronized boolean fileChanged(String nick, String fileName, long fileSize, String strfi, int stat) {
+	public synchronized boolean fileChanged(String nick, String fileName, long fileSize, String strfi, int stat) throws NotConnectedException{
 		boolean response=false;
-		while(!connFlag); //wait for connect
+		if(!connected){ throw new NotConnectedException(); }
 		try {
 			obos.writeObject(new String("FCHANGE"));
 			obos.writeObject(fileName);
@@ -100,8 +115,8 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public HashSet<FileInfo> searchFile(String query) {
-		while(!connFlag); //wait for connect
+	public HashSet<FileInfo> searchFile(String query) throws NotConnectedException{
+		if(!connected){ throw new NotConnectedException(); }
 		HashSet<FileInfo> hs=new HashSet<FileInfo>();
 		try {
 			obos.writeObject(new String("SEARCH"));
@@ -118,9 +133,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	}
 
 	@Override
-	public synchronized boolean downloadFile(InetSocketAddress sa, String checksum,int sessionID) {
+	public synchronized boolean downloadFile(InetSocketAddress sa, String checksum,int sessionID) throws NotConnectedException{
 		boolean response=false;
-		while(!connFlag); //wait for connect
+		if(!connected){ throw new NotConnectedException(); }
 		try {
 			obos.writeObject(new String("DOWNLOAD"));
 			obos.writeObject(sa);
@@ -141,7 +156,6 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	@Override
 	public synchronized boolean register(Peer p, boolean status) {
 		boolean response=false;
-		while(!connFlag); //wait for connect
 		try {
 			obos.writeObject(new String("REG"));
 			obos.writeObject(p.toString());
@@ -158,7 +172,8 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	}
 	
 	@Override
-	public FileInfo getFileInfo(String checksum) {
+	public FileInfo getFileInfo(String checksum) throws NotConnectedException{
+		if(!connected){ throw new NotConnectedException(); }
 		try {
 			obos.writeObject(new String("GETFINFO"));
 			obos.writeObject(checksum);
@@ -177,12 +192,9 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 	@Override
 	public void run() {
 		/* This thread continously listen to Server through PeerStub*/
-		System.out.println("Connecting to SuperPeer");
-		initConnection();
-		//System.out.println("Connected to SuperPeer");
 		
 		try{	
-			while(connFlag){
+			while(connected){
 				try {
 					String ch="RESPONSE";
 					
@@ -221,12 +233,11 @@ public class SuperPeerStub implements SuperPeer,Runnable{
 		}catch (SocketException e) {
 			// Connection lost
 			System.out.println("Disconnected from superpeer");
-			connFlag=false;
+			connected=false;
 		}catch(IOException e){
 			System.out.println("Listening stopped due to IOException");
-			connFlag=false;
+			connected=false;
 		}
-		p.view.setInfo("STAT", "Offline");
 		System.out.println("Reconnecting...");
 		initConnection(); //Reconnect
 	}//run()

@@ -82,7 +82,7 @@ public class WatchDir implements Runnable{
         this.keys = new HashMap<WatchKey,Path>();
         this.recursive = recursive;
 
-        readCurrentFiles(dir.toFile());
+        //readCurrentFiles(dir.toFile()); //This function is written in PeerImpl
         if (recursive) {
             System.out.format("Scanning %s ...\n", dir);
             registerAll(dir);

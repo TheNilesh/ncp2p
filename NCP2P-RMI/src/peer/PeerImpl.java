@@ -21,8 +21,8 @@ public class PeerImpl implements Peer {
 	public String nick;
 	public View view;
 	
-	SuperPeer sp;
-	Thread spThrd;
+	private SuperPeerStub sp;
+	//Thread spThrd;
 	
 	public File shareDir;
 	private WatchDir watcher;
@@ -42,31 +42,19 @@ public class PeerImpl implements Peer {
 		ignored=new Vector<File>();
 		
 		nick=conf.getNick();
-		//nick="Peer" + new Random().nextInt(10);
-		
-		sp=new SuperPeerStub(this,conf.getSuperpeers());
-		
-		spThrd=new Thread((Runnable) sp); //? Runnable
-		spThrd.start();
-		
-		while(!sp.register(this, true)){ //registration failed, then go inside loop, to change nickname
-			nick="Peer" + new Random().nextInt(20);
-		};
-		
-		view.setInfo("PNAME",nick);
-		view.setInfo("STAT","Online"); 
-		
-		try{
-			shareDir=new File(conf.getSharedDir());
-			watcher=new WatchDir(shareDir.toPath(),false,this);
-			Thread watcherThread=new Thread(watcher);
-			watcherThread.start();
-			view.setInfo("SHARE", conf.getSharedDir());
-			
-		}catch(IOException ex){
-			System.out.println("Unable to start directory watch Service");
+		if(nick.trim().equalsIgnoreCase("")){
+			nick="Peer" + new Random().nextInt(10);
 		}
 		
+		shareDir=new File(conf.getSharedDir());
+		sp=new SuperPeerStub(this,conf.getSuperpeers()); //establishes connection and register nickname
+		
+		System.out.println("sp created");
+		if(sp.connected){
+			sendAllFilesInfo();
+		}
+		
+		view.setInfo("SHARE", conf.getSharedDir());
 		dm=new DownloadManager(this,conf.getStuns());
 
 	}
@@ -94,9 +82,12 @@ public class PeerImpl implements Peer {
 			System.out.println("MODIFIED:" + f.getName());
 		}
 
-
-		sp.fileChanged(nick,f.getName(),f.length(),strfi,stat);
-		//TODO: rather than sending FileInfo object, send only nameOf file, Size in bytes, Checksum.. enough to construct fi at server side.
+			try{
+				sp.fileChanged(nick,f.getName(),f.length(),strfi,stat);
+				//TODO: rather than sending FileInfo object, send only nameOf file, Size in bytes, Checksum.. enough to construct fi at server side.
+			}catch(NotConnectedException ne){
+				//Do nothing
+			}
 	}
 	
 	void downloadFile(String checksum,String localName){
@@ -107,65 +98,73 @@ public class PeerImpl implements Peer {
 			System.out.println("You already have this file saved as "+ f.getName());
 			return;
 		}
-		
-		FileInfo fi=sp.getFileInfo(checksum);
-		if(fi==null){
-			System.out.println("File not available!");
-			return;
-		}
-		
-		int sessionID=new Random().nextInt(255);
-		
-		f=new File(shareDir + "\\" +  localName);
-		ignored.add(f);
-		
-		dm.addDownload(fi, f, sessionID); //local representative of this download
-
-		boolean b=sp.downloadFile(dm.getExternalAddress(),checksum,sessionID);
-		if(b==true){
-			System.out.println("SuperPeer initiated download");
-			view.showMessage("SuperPeer initiated download");
-		}else{
-			System.out.println("SuperPeer failed to initiate download");
-		}
+		try{
+			
+			FileInfo fi=sp.getFileInfo(checksum);
+			if(fi==null){
+				System.out.println("File not available!");
+				view.showMessage("File not available!");
+				return;
+			}
+			
+			int sessionID=new Random(System.currentTimeMillis()).nextInt(255);
+			
+			f=new File(shareDir + "\\" +  localName);
+			ignored.add(f);
+			
+			dm.addDownload(fi, f, sessionID); //local representative of this download
+	
+			boolean b=sp.downloadFile(dm.getExternalAddress(),checksum,sessionID);
+			if(b==true){
+				System.out.println("SuperPeer initiated download");
+			}else{
+				System.out.println("SuperPeer failed to initiate download");
+				view.showMessage("SuperPeer failed to initiate download");
+				dm.removeDownload(sessionID);
+			}
+		}catch(NotConnectedException ne){ view.showMessage("Not connected!"); }
 	}
 	
 	String[][] searchFile(String query){
 
-		HashSet<FileInfo> searchResult=sp.searchFile(query);
-		int resCnt=searchResult.size();
-		String[][] strRes=new String[resCnt][5];
-		int i=0;
-		
-		Iterator<FileInfo> iter = searchResult.iterator();
-		while(iter.hasNext()){
-			 	FileInfo fi = iter.next();
-			 	//name tags checksum length, seeders
-				System.out.format("%25s\t%10dKB\t%16s\t",fi.toString(), fi.getLen(), fi.getChecksum());
-				strRes[i][0]=fi.toString();
-				strRes[i][2]="" + fi.getLen()/1024;
-				strRes[i][4]=fi.getChecksum();
-				
-				
-				Iterator<String> tit=fi.getTags().iterator();
-				while(tit.hasNext()){
-					String s=tit.next();
-					System.out.format("%s,",s);
-					strRes[i][1]=s + ", ";
-				}
-				
-				System.out.format("\t");
-				Iterator<String> pit=fi.getSeeders().iterator();
-				while(pit.hasNext()){
-					String p=pit.next();
-					System.out.format("%s,",p);
-					strRes[i][3]=p + ", ";
-				}
-				i++;
-				System.out.println();
-				
+		try{
+			HashSet<FileInfo> searchResult=sp.searchFile(query);
+			int resCnt=searchResult.size();
+			String[][] strRes=new String[resCnt][5];
+			int i=0;
+			
+			Iterator<FileInfo> iter = searchResult.iterator();
+			while(iter.hasNext()){
+				 	FileInfo fi = iter.next();
+				 	//name tags checksum length, seeders
+					System.out.format("%25s\t%10dKB\t%16s\t",fi.toString(), fi.getLen(), fi.getChecksum());
+					strRes[i][0]=fi.toString();
+					strRes[i][2]="" + fi.getLen()/1024;
+					strRes[i][4]=fi.getChecksum();
+					
+					
+					Iterator<String> tit=fi.getTags().iterator();
+					while(tit.hasNext()){
+						String s=tit.next();
+						System.out.format("%s,",s);
+						strRes[i][1]=s + ", ";
+					}
+					
+					System.out.format("\t");
+					Iterator<String> pit=fi.getSeeders().iterator();
+					while(pit.hasNext()){
+						String p=pit.next();
+						System.out.format("%s,",p);
+						strRes[i][3]=p + ", ";
+					}
+					i++;
+					System.out.println();
+			}
+			return strRes;
+		}catch(NotConnectedException ne){
+			view.showMessage("Not Connected!");
+			return null;
 		}
-		return strRes;
 	}
 	
 	//****************TO BE CALLED by SERVER **************
@@ -202,4 +201,22 @@ public class PeerImpl implements Peer {
 	public Configuration getConf(){
 		return conf;
 	}
-}
+
+	public void sendAllFilesInfo() {	//Inform file metadata to (new) sp
+		try {
+			if(watcher==null){
+				watcher=new WatchDir(shareDir.toPath(),false,this);
+				Thread watcherThread=new Thread(watcher);
+				watcherThread.start();
+				System.out.println("Started watch Service");
+				//System.out.println("Reading current files");
+				//watcher.readCurrentFiles(shareDir);
+			}
+
+			
+			
+		}catch(IOException ex){
+			System.out.println("Unable to start directory watch Service");
+		}
+	}
+}//class

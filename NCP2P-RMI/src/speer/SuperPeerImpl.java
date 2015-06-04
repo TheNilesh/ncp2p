@@ -34,6 +34,7 @@ public class SuperPeerImpl implements SuperPeer {
 		peers=new Hashtable<String,Peer>();
 		files=new ConcurrentHashMap<String,FileInfo>();
 		server=new SPServer(this,4689);
+		System.out.println("4689");
 		stun=new STUNServer(4690);
 	}
 	

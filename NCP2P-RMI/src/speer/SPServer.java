@@ -4,18 +4,16 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import com.SuperPeer;
-
 public class SPServer implements Runnable{
 	/* Runs ServerSocket and handles new Connection Requests 
 	 */
-	SuperPeer sp;
+	SuperPeerImpl sp;
 	ServerSocket srv;
 	boolean connFlag;
 	ThreadGroup connections;
 	int cnt;
 	
-	SPServer(SuperPeer sp,int port) throws IOException{
+	SPServer(SuperPeerImpl sp,int port) throws IOException{
 		this.sp=sp;
 		srv=new ServerSocket(port);
 		connFlag=true;
