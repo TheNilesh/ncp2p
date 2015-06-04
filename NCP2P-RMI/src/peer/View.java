@@ -1,6 +1,7 @@
 package peer;
 
 import java.awt.Font;
+import java.awt.Toolkit;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -17,9 +18,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
-import java.awt.Toolkit;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class View {
 
@@ -128,9 +126,10 @@ public class View {
 		dftSearch.addColumn("MD5");
        
 		tblSearch = new JTable(dftSearch);
-		tblSearch.setShowVerticalLines(false);
+		//tblSearch.setShowVerticalLines(false);
+		tblSearch.setShowGrid(false);
 		scrSearch.setViewportView(tblSearch);
-		tblSearch.setRowHeight(30);
+		tblSearch.setRowHeight(25);
 		TableColumn tc=tblSearch.getColumnModel().getColumn(2);
 		tc.setMinWidth(50);
 		tc.setMaxWidth(50);
@@ -169,6 +168,13 @@ public class View {
 		
 		tblTasks = new JTable(dftTasks);
 		scrTasks.setViewportView(tblTasks);
+		
+		tblTasks.setShowGrid(false);
+		tblTasks.setRowHeight(25);
+		TableColumn tc2=tblTasks.getColumnModel().getColumn(0);
+		tc2.setMinWidth(50);
+		tc2.setMaxWidth(50);
+		tc2.setPreferredWidth(50);
 		
 		JLabel lblBackgroundTaskLike = new JLabel("Background task, like Download, Upload will be shown here.");
 		lblBackgroundTaskLike.setBounds(10, 11, 564, 14);
@@ -290,6 +296,12 @@ public class View {
 
 	public String getInputString(String string) {
 		return JOptionPane.showInputDialog(string);
+	}
+	
+	public String getInputString(String title,String question,String defaultAnswer){
+		String input = (String)JOptionPane.showInputDialog(null, question,
+				title, JOptionPane.QUESTION_MESSAGE,null,null,defaultAnswer);
+		return input;
 	}
 
 

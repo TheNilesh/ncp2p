@@ -12,7 +12,6 @@ import com.Configuration;
 import com.DigestCalc;
 import com.FileInfo;
 import com.Peer;
-import com.SuperPeer;
 import com.TwoWayHashMap;
 
 public class PeerImpl implements Peer {

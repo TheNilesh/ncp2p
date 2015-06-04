@@ -65,7 +65,8 @@ public class Controller extends MouseAdapter implements ActionListener {
 			int column = target.getSelectedColumn();
 			if(column==0){
 				String md5=(String)target.getValueAt(row, 4);
-				String localName=view.getInputString("Enter File Name to save as :");
+				String oldName=(String)target.getValueAt(row, 0);
+				String localName=view.getInputString("Download","Enter File Name to save as :",oldName);
 				if(localName!=null){
 					model.downloadFile(md5, localName);
 				}
