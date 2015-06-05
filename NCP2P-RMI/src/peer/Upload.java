@@ -55,6 +55,7 @@ public class Upload implements Runnable{
 
 	void readAndSend(){
 		byte []tmp=null;
+		int blkcnt=blkto-blkfrm;
 		
 		try {
 		  FileInputStream fis=new FileInputStream(file); //good for sequential access
@@ -80,7 +81,7 @@ public class Upload implements Runnable{
 			    	   dm.p.view.updateProgress(sessionID,-1);
 		    		   return;
 		    	   }
-			       dm.p.view.updateProgress(sessionID,i-blkfrm);
+			       dm.p.view.updateProgress(sessionID,(i-blkfrm)/blkcnt * 100 +1);
 			   }//for loop
 			   dm.taskComplete(sessionID);
 		   }catch(IOException e){
@@ -115,7 +116,7 @@ public class Upload implements Runnable{
 				dp.setAddress(InetAddress.getByName(ip));
 				dp.setPort(port);
 				
-				System.out.println("Sending to :" + ip + ":"+ port);
+				//System.out.println("Sending to :" + ip + ":"+ port);
 				
 				ds.send(dp);
 				ds.receive(dp);		//wait for max 3 seconds

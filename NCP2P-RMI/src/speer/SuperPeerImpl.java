@@ -14,10 +14,12 @@ import com.SuperPeer;
 
 public class SuperPeerImpl implements SuperPeer {
 
+	private SPView v;
 	private transient Hashtable<String,Peer> peers;
 	private transient ConcurrentHashMap<String,FileInfo> files;
 	@SuppressWarnings("unused") //Creates thread, so no meaning unused
 	private SPServer server;
+	int maxPeers;
 	@SuppressWarnings("unused")	//Creates thread, so no meaning unused
 	
 	public static void main(String args[]){
@@ -30,7 +32,7 @@ public class SuperPeerImpl implements SuperPeer {
 	}
 	
 	public SuperPeerImpl(int port) throws IOException{
-		
+		maxPeers=3;
 		peers=new Hashtable<String,Peer>();
 		files=new ConcurrentHashMap<String,FileInfo>();
 		server=new SPServer(this,port);
@@ -137,6 +139,10 @@ public class SuperPeerImpl implements SuperPeer {
 		if(status){
 			success=( peers.put(p.toString(), p) == null); /*//Returns:the previous value of the specified key in this hashtable, or null if it did not have one
 															*If adding peer succeed? two peers with same name cant be added*/
+			if(success){
+				v.addPeer(p.toString());
+			}
+			
 		}else{
 			success=(peers.remove(p.toString()) != null);
 			//Peer unregistred, delete its file from files
@@ -147,7 +153,12 @@ public class SuperPeerImpl implements SuperPeer {
 				}
 			}
 			
+			if(success){
+				v.removePeer(p.toString());
+			}
+			
 		}
+		
 		return success;
 	}
 
@@ -171,6 +182,14 @@ public class SuperPeerImpl implements SuperPeer {
 	@Override
 	public FileInfo getFileInfo(String checksum) {
 		return files.get(checksum);
+	}
+
+	public void setView(SPView v) {
+		this.v=v;
+	}
+
+	public void setMaxPeers(int a) {
+		maxPeers=a;
 	}
 
 }

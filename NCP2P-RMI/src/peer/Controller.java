@@ -14,9 +14,7 @@ public class Controller extends MouseAdapter implements ActionListener {
 
 	PeerImpl model;
 	View view;
-	public Controller(){
 
-	}
 	public void setView(View v){
 		this.view=v;
 	}
@@ -83,9 +81,9 @@ public class Controller extends MouseAdapter implements ActionListener {
 		View v=new View();
 		try{
 			PeerImpl p=new PeerImpl(v,args[0]);
-		c.setView(v);
-		c.setModel(p);
-		v.setController(c);
+			c.setView(v);
+			c.setModel(p);
+			v.setController(c);
 		}catch(ArrayIndexOutOfBoundsException e){
 			v.showMessage("Create setting.xml.");
 		}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <configuration>
-    <Nick-Name>NileshHome1</Nick-Name>
-    <Shared-Directory>E:\TEST1</Shared-Directory>
+    <Nick-Name>NileshHome3</Nick-Name>
+    <Shared-Directory>E:\TEST3</Shared-Directory>
     <superpeerlist>
         <SuperPeer>
             <ip>192.168.1.253</ip>

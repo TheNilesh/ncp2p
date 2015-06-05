@@ -184,7 +184,7 @@ public class View {
 		TableColumn tc3=tblTasks.getColumnModel().getColumn(2);
 		tc3.setCellRenderer(new ProgressRenderer());	//now value will be progressbar
 		
-		JLabel lblBackgroundTaskLike = new JLabel("Background task, like Download, Upload will be shown here.");
+		JLabel lblBackgroundTaskLike = new JLabel("Background tasks, Download and Upload will be shown here.");
 		lblBackgroundTaskLike.setBounds(10, 11, 564, 14);
 		pnlTasks.add(lblBackgroundTaskLike);
 		
@@ -301,7 +301,7 @@ public class View {
 	}
 
 	public void showMessage(String string) {
-		JOptionPane.showMessageDialog(frmPeerToPeer, string,  "Result", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(frmPeerToPeer, string,  "Message", JOptionPane.WARNING_MESSAGE);
 	}
 
 	public String getInputString(String string) {

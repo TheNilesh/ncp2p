@@ -66,7 +66,7 @@ public class Download{
 				if(flags[blockNumber]==0){
 					storeToFile(blockNumber,payload);
 					blkgot++;
-					dm.p.view.updateProgress(sessionID,blkgot);
+					dm.p.view.updateProgress(sessionID,(blkgot/blkcnt)*100 + 1);
 				}
 				if(blkgot==blkcnt){
 					out.close();

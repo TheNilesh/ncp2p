@@ -27,8 +27,10 @@ public class SPServer implements Runnable{
 		while(connFlag){
 			try {
 				Socket s=srv.accept();
-				Thread t=new Thread(connections,new PeerStub(sp,s),"CON" + cnt++);
-				t.start();
+				if(connections.activeCount() <= sp.maxPeers){
+					Thread t=new Thread(connections,new PeerStub(sp,s),"CON" + cnt++);
+					t.start();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
