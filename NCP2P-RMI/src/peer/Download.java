@@ -58,7 +58,7 @@ public class Download{
 			
 			try {
 				//blockNumber=bis.read();	//Which location
-				blockNumber=dis.read();	//Which location
+				blockNumber=dis.readInt();	//Which location
 				
 				payload=new byte[bis.available()];
 				bis.read(payload); //read data

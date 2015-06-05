@@ -75,7 +75,7 @@ public class PeerImpl implements Peer {
 			strfi=d.calculateMD5(f);
 			files.put(strfi,f.getName());	//add new mapping
 			System.out.println("MODIFIED:" + f.getName());
-			stat=FileInfo.CREATE;
+			return;
 		}
 
 			try{

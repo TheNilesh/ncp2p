@@ -82,7 +82,7 @@ public class Upload implements Runnable{
 		    	   }
 			       dm.p.view.updateProgress(sessionID,i-blkfrm);
 			   }//for loop
-		       
+			   dm.taskComplete(sessionID);
 		   }catch(IOException e){
 			   System.out.println("File reading error");
 			   e.printStackTrace();
@@ -134,5 +134,9 @@ public class Upload implements Runnable{
 	public void run() {
 		readAndSend();
 		
+	}
+	
+	public String toString(){
+		return file.getName();
 	}
 }

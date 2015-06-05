@@ -90,10 +90,17 @@ public class DownloadManager implements Runnable {
 			String checksum=dc.calculateMD5(d.localfile);
 			if(d.fi.getChecksum().equals(checksum)){
 				p.downloadComplete(d.localfile);
+				downloads.remove(sessionID);
 			}else{
 				p.view.showMessage("Download Error, Checksum verification failed");
 			}
 			
+		}else{
+			Upload u=uploads.get(sessionID);
+			if(u!=null){
+				System.out.println("Upload:" + u +  " completed.");
+				uploads.remove(sessionID);
+			}
 		}
 		
 	}
@@ -138,8 +145,6 @@ public class DownloadManager implements Runnable {
 					
 					ds.setSoTimeout(0); //after this no need to timeout
 					return;
-			//	}catch(ArrayOutOfBoundException e){
-			//		System.out.println("Invalid STUN protocol : " + h);
 				}catch(SocketTimeoutException e){
 					System.out.println("STUN Server:" + h + " , did not replied within " + TIMEOUT + " milliseconds.");
 				}catch(UnknownHostException e){
@@ -152,12 +157,32 @@ public class DownloadManager implements Runnable {
 				h=stunservers.removeFirst();
 				stunservers.addLast(h);
 				i++;
-			}
+			}//while loop
 		} catch (SocketException e) {
 			System.out.println("Failed creating Socket.");
 			p.view.setInfo("EXIP", "ERROR");
 			e.printStackTrace();
+		}finally{
+			try {
+				ds.setSoTimeout(0);
+			} catch (SocketException e) {}
 		}
+		
+		//All attempts failed, so save local IP address
+		
+		try {
+			myaddress=new InetSocketAddress(InetAddress.getLocalHost(),ds.getLocalPort());
+			System.out.println("Creating local socket");
+			p.view.setInfo("EXIP",InetAddress.getLocalHost().getHostAddress() + ":" + ds.getLocalPort());
+			return;
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		
+		//Still failed then
+		myaddress=new InetSocketAddress(ds.getLocalAddress(), ds.getLocalPort());
+		System.out.println("Creating local2 socket");
+		p.view.setInfo("EXIP",ds.getLocalAddress().getHostAddress() + ":" + ds.getLocalPort());
 	}
 	
 	/*Downloader listens on UDP ######################################### */

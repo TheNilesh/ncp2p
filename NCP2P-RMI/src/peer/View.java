@@ -1,14 +1,17 @@
 package peer;
 
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Toolkit;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
@@ -16,6 +19,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -176,6 +180,9 @@ public class View {
 		tc2.setMinWidth(50);
 		tc2.setMaxWidth(50);
 		tc2.setPreferredWidth(50);
+		 
+		TableColumn tc3=tblTasks.getColumnModel().getColumn(2);
+		tc3.setCellRenderer(new ProgressRenderer());	//now value will be progressbar
 		
 		JLabel lblBackgroundTaskLike = new JLabel("Background task, like Download, Upload will be shown here.");
 		lblBackgroundTaskLike.setBounds(10, 11, 564, 14);
@@ -243,12 +250,14 @@ public class View {
 		separator_1.setBounds(56, 72, 442, 2);
 		pnlAbout.add(separator_1);
 		
-		JLabel lblUrl = new JLabel("<html> <i>https://www.github.com/TheNilesh/ncp2p</i></html>");
+		JLabel lblUrl = new JLabel("https://www.github.com/TheNilesh/ncp2p");
 		lblUrl.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		lblUrl.setBounds(139, 85, 241, 14);
 		pnlAbout.add(lblUrl);
 		
-		JLabel lblInfo = new JLabel("<html>Programmers: <br> <b>Nilesh Akhade</b> [akhadenilesh93@gmail.com]<br> <b>Ajay Choudhary</b> [koolacac@gmail.com]<html>");
+		JLabel lblInfo = new JLabel("<html>Programmers: <br> <b>Nilesh Akhade</b> [akhadenilesh93@gmail.com]<br>"
+				+ "					 <b>Ajay Choudhary</b> [koolacac@gmail.com]<br><b>Aditya Narke</b>[adityanarke62@gmail.com]<br>"
+				+ "						<b>Ajit Deshmane</b>[ajitdeshmane555@gmail.com][<html>");
 		lblInfo.setBounds(76, 123, 304, 73);
 		pnlAbout.add(lblInfo);
 		
@@ -360,4 +369,30 @@ public class View {
 			break;
 		}	
 	}
+}
+
+class ProgressRenderer extends DefaultTableCellRenderer {
+	private static final long serialVersionUID = 1L;
+	private final JProgressBar b = new JProgressBar(0, 100);
+
+    public ProgressRenderer() {
+        super();
+        setOpaque(true);
+        b.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        b.setStringPainted(true);
+    }
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        Integer i = (Integer) value;
+        String text = "Completed";
+        if (i < 0) {
+            text = "Error";
+        } else if (i < 100) {
+            b.setValue(i);
+            return b;
+        }
+        super.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+        return this;
+    }
 }
