@@ -72,7 +72,7 @@ public class View {
 	private void initialize() {
 		frmPeerToPeer = new JFrame();
 		frmPeerToPeer.setIconImage(Toolkit.getDefaultToolkit().getImage(View.class.getResource("/res/p2p3d.png")));
-		frmPeerToPeer.setTitle("Peer to Peer File Sharing");
+		frmPeerToPeer.setTitle("Peer Module");
 		frmPeerToPeer.setBounds(100, 100, 651, 508);
 		frmPeerToPeer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPeerToPeer.getContentPane().setLayout(null);
@@ -227,14 +227,6 @@ public class View {
 		btnSave = new JButton("Save");
 		btnSave.setBounds(331, 152, 91, 23);
 		pnlSetting.add(btnSave);
-		
-		JPanel pnlLogs = new JPanel();
-		tabs.addTab("Logs", null, pnlLogs, null);
-		pnlLogs.setLayout(null);
-		
-		JLabel lblLogs = new JLabel("Background logs :");
-		lblLogs.setBounds(23, 11, 179, 14);
-		pnlLogs.add(lblLogs);
 		
 		JPanel pnlAbout = new JPanel();
 		pnlAbout.setToolTipText("");

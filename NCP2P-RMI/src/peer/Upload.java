@@ -81,7 +81,8 @@ public class Upload implements Runnable{
 			    	   dm.p.view.updateProgress(sessionID,-1);
 		    		   return;
 		    	   }
-			       dm.p.view.updateProgress(sessionID,(i-blkfrm)/blkcnt * 100 +1);
+			       dm.p.view.updateProgress(sessionID,i-blkfrm);
+			      // System.out.println("OK" + ((i-blkfrm)*100)/blkcnt);
 			   }//for loop
 			   dm.taskComplete(sessionID);
 		   }catch(IOException e){
